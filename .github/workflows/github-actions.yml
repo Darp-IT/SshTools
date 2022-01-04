@@ -28,4 +28,4 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --verbosity normal
