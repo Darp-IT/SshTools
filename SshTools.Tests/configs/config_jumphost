@@ -1,0 +1,17 @@
+﻿#Start of config_jumphost
+HostName jumphost.com
+Port=12345
+User  = jumpuser
+#End of config_jumphost
+
+Match user aaa
+  Port 00000
+
+Host testii
+  Port 11111
+
+Host test
+  ## stuff of the test host
+  Port=54321
+  User       = testuser
+  Include configs/config_start

@@ -1,0 +1,30 @@
+﻿
+IdentitiesOnly=yes
+Include configs/config_start
+### dummy host
+Host dummy
+  HostName       ="unknown"
+        
+
+Host eva
+  User evauser
+Match     user  evauser
+  HostName 1.1.1.1
+  
+Match host 1.1.1.1
+#dummy identityFile
+  IdentityFile="~/.ssh/id_rsa"
+
+### MyJumpHost
+Host jumphost
+  # Comment for include
+  Include    configs/config_jumphost
+  User testuser2
+  
+# Every user should have this jump
+Host=* !jumphost
+  ProxyJump jumphost
+  User defaultuser
+  IdentityFile=  ~/.ssh/id_rsa-cert.pub
+  IdentityFile "~/.ssh/id_rsa"
+  IdentitiesOnly yes

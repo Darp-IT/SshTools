@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SshTools", "SshTools\SshTools.csproj", "{DA0E397C-174E-4E78-A655-C07126AA7B71}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SshTools.Tests", "SshTools.Tests\SshTools.Tests.csproj", "{6311BEAD-2CC2-472D-8DC6-F7478FDA55B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SshTools.SshNet", "SshTools.SshNet\SshTools.SshNet.csproj", "{CE2405E8-F6D2-4439-8C31-61707860E19D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DA0E397C-174E-4E78-A655-C07126AA7B71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA0E397C-174E-4E78-A655-C07126AA7B71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA0E397C-174E-4E78-A655-C07126AA7B71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA0E397C-174E-4E78-A655-C07126AA7B71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6311BEAD-2CC2-472D-8DC6-F7478FDA55B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6311BEAD-2CC2-472D-8DC6-F7478FDA55B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6311BEAD-2CC2-472D-8DC6-F7478FDA55B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6311BEAD-2CC2-472D-8DC6-F7478FDA55B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE2405E8-F6D2-4439-8C31-61707860E19D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE2405E8-F6D2-4439-8C31-61707860E19D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE2405E8-F6D2-4439-8C31-61707860E19D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE2405E8-F6D2-4439-8C31-61707860E19D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
