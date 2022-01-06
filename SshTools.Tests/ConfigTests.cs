@@ -10,8 +10,8 @@ namespace SshTools.Tests
 {
     public class ParserTests
     {
-        /// One should be able to reconstruct the original config file
-        [Fact]
+        /*/// One should be able to reconstruct the original config file
+        Fact]
         public void TestReconstructString()
         {
             var text = File.ReadAllText("configs/config");
@@ -21,7 +21,7 @@ namespace SshTools.Tests
             var config = configRes.Value;
             var text2 = config.Serialize();
             text.ShouldEqual(text2);
-        }
+        }*/
 
         private static SshConfig LoadConfig(string name, bool compile = false)
         {
