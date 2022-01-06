@@ -9,6 +9,18 @@ namespace SshTools.Config.Parser
     {
         private static readonly Regex Regex = new Regex("[^\\s]+|\\s+", RegexOptions.Compiled);
         
+        /// <summary>
+        /// Parses the argument of a Match into a list of criteria with optionally arguments and spacing <br/>
+        /// Rules:
+        /// <list type="bullet">
+        /// <item>Criteria are case sensitive</item>
+        /// <item>Multiple criteria can be separated by ' ' or ','</item>
+        /// <item>Spacing and arguments are null if not available</item>
+        /// <item>Method will return failure if unknown criteria or unexpected arguments are found</item>
+        /// </list>
+        /// </summary>
+        /// <param name="str">The match argument to be parsed</param>
+        /// <returns>A list with all information</returns>
         public static Result<IList<(Criteria, string, string, string)>> Parse(string str)
         {
             var matches = Regex.Matches(str);

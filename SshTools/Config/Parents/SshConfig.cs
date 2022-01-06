@@ -99,7 +99,7 @@ namespace SshTools.Config.Parents
                     quoted,
                     spacingBack
                 );
-                var paramRes = key.GetParameter(argumentRes.Value, appearance);
+                var paramRes = key.GetParameter(argumentRes, appearance);
                 if (paramRes.IsFailed) return paramRes.ToResult();
                 var param = paramRes.Value;
                 if (param.Argument is Node node)
