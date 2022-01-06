@@ -50,6 +50,7 @@ namespace SshTools.Tests.Unit.Parser
         [Theory]
         [InlineData("example", "", true)]
         [InlineData("* !test", "", true)]
+        [InlineData("* !test", null, true)]
         public void Glob_TestEmptyInput(string pattern, string value, bool outcome) => 
             Glob(pattern, value).Should().Be(outcome);
     }

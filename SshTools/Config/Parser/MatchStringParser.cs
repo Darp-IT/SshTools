@@ -7,7 +7,7 @@ namespace SshTools.Config.Parser
 {
     public static class MatchStringParser
     {
-        private static readonly Regex Regex = new Regex("[^\\s]+|\\s+", RegexOptions.Compiled);
+        private static readonly Regex Regex = new Regex("[^\\s,]+|[\\s,]+", RegexOptions.Compiled);
         
         /// <summary>
         /// Parses the argument of a Match into a list of criteria with optionally arguments and spacing <br/>

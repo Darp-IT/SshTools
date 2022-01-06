@@ -86,6 +86,10 @@ namespace SshTools.Tests.Unit.Parser
                 GetTuple(Criteria.Host, " ", "host0", " "),
                 GetTuple(Criteria.User, " ", "user1")
             };
+            yield return new object[] { "host host0,user user1", true, 
+                GetTuple(Criteria.Host, " ", "host0", ","),
+                GetTuple(Criteria.User, " ", "user1")
+            };
             yield return new object[] {"final all", true, 
                 GetTuple(Criteria.Final, spacingBack:" "),
                 GetTuple(Criteria.All) 
