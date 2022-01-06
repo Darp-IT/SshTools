@@ -36,7 +36,7 @@ namespace SshTools.Config.Parser
                     case "yes":
                         return Result.Ok(true);
                     case "no":
-                        return Result.Ok(true);
+                        return Result.Ok(false);
                     default:
                         return Result.Fail<bool>($"Invalid input {str}");
                 }
@@ -56,7 +56,9 @@ namespace SshTools.Config.Parser
 
         public ArgumentParser(DeserializerFunc deserializer, SerializerFunc serializer, string[] possibleValues = null)
         {
-            Deserializer = deserializer;
+            Deserializer = str => str == null
+                ? Result.Fail<T>("Could not parse input str of type null")
+                : deserializer(str);
             Serializer = serializer;
             PossibleValues = possibleValues;
         }
@@ -68,8 +70,6 @@ namespace SshTools.Config.Parser
 
         private static Result<T> Parse(ParserFunc func, string value)
         {
-            if (value == null)
-                return default;
             return func.Invoke(value, out var o) 
                 ? Result.Ok(o) 
                 : Result.Fail<T>($"Could not parse {value} to {typeof(T).Name}");
