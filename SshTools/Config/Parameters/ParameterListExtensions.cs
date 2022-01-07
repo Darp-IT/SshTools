@@ -31,7 +31,7 @@ namespace SshTools.Config.Parameters
         /// <param name="parameters">A sequence of parameters to get from</param>
         /// <param name="keyword">The <see cref="Keyword{T}"/> to be searched for</param>
         /// <typeparam name="T">Argument type</typeparam>
-        /// <returns>First matching Argument as <typeparamref name="T"/></returns>
+        /// <returns>First matching Argument as <typeparamref name="T"/> or default</returns>
         public static T Get<T>(this IEnumerable<IParameter> parameters, Keyword<T> keyword) => 
             (T) parameters.Get((Keyword) keyword);
 
@@ -41,7 +41,7 @@ namespace SshTools.Config.Parameters
         /// </summary>
         /// <param name="parameters">A sequence of parameters to get from</param>
         /// <param name="keyword">The <see cref="Keyword"/> to be searched for</param>
-        /// <returns>First argument as <see cref="object"/></returns>
+        /// <returns>First argument as <see cref="object"/> or default</returns>
         internal static object Get(this IEnumerable<IParameter> parameters, Keyword keyword) =>
             parameters
                 .Where(p => p.Is(keyword))
@@ -141,7 +141,7 @@ namespace SshTools.Config.Parameters
         /// <summary>
         /// Flattens the given sequence <paramref name="parameters"/>.
         /// Generates a list of all parameters, contained in <paramref name="parameters"/>;
-        /// Creates new and empty nodes
+        /// Creates new and empty nodes and automatically resolves includes
         /// </summary>
         /// <param name="parameters">A sequence of parameters to flatten</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are the result of the flattening</returns>
@@ -206,7 +206,8 @@ namespace SshTools.Config.Parameters
         }
 
         /// <summary>
-        /// Clones all parameters of given <paramref name="parameters"/>
+        /// Clones all parameters of given <paramref name="parameters"/> <br/>
+        /// Cloned configs will loose all information about comments on the tail of the config
         /// </summary>
         /// <param name="parameters">A sequence of parameters to invoke the clone on.</param>
         /// <typeparam name="TParam">The type of the parameters of <paramref name="parameters" /></typeparam>

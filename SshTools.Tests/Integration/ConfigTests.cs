@@ -7,7 +7,7 @@ using Xunit;
 
 namespace SshTools.Tests.Integration
 {
-    public class ParserTests
+    public class ConfigTests
     {
         /*/// One should be able to reconstruct the original config file
         Fact]
@@ -40,35 +40,6 @@ namespace SshTools.Tests.Integration
             SshTools.Configure(settings => settings.SetKeywords(Keyword.Values));
             var configRes2 = SshConfig.ReadFile("configs/config");
             configRes2.IsFailed.ShouldBeFalse();
-        }
-
-        /// One should be able to return a version with flattened includes from a node
-        [Fact]
-        public void TestFlattenHost()
-        {
-            var config = LoadConfig("configs/config");
-            var jumpHost = config
-                .Select(p => p.Argument as HostNode)
-                .First(host => host is {MatchString: "jumphost"});
-            var includedJumpHost = jumpHost
-                .Flatten()
-                .Cloned()
-                .FirstToHost("dummy");
-
-            //Test that there are no more includes anymore
-            jumpHost
-                .Count(p => p.IsInclude() || p.Argument is Node node && node.Has(Keyword.Include))
-                .ShouldEqual(1);
-            includedJumpHost
-                .Count(p => p.IsInclude())
-                .ShouldEqual(0);
-
-            //Verify list is independent of old config
-            jumpHost.Get(Keyword.Include).HostName.ShouldEqual("jumphost.com");
-            includedJumpHost.HostName.ShouldEqual("jumphost.com");
-            includedJumpHost.HostName = "abc.com";
-            includedJumpHost.HostName.ShouldEqual("abc.com");
-            jumpHost.Get(Keyword.Include).HostName.ShouldEqual("jumphost.com");
         }
 
         /// One should be able to get a list of all nodes, with includes being stripped

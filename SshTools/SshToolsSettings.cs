@@ -40,21 +40,21 @@ namespace SshTools
         }
 
         /// <summary>
-        /// Determines, whether a <see cref="Keyword"/> for the given key is available
+        /// Determines, whether a <see cref="Keyword"/> for the given, case invariant key is available
         /// </summary>
         /// <param name="keyword">The key to look for</param>
         /// <returns>true, if key is known</returns>
         public bool HasKeyword(string keyword) => _keywordDict.ContainsKey(keyword.ToUpper());
         
         /// <summary>
-        /// Gets the <see cref="Keyword"/> for the given key
+        /// Gets the <see cref="Keyword"/> for the given, case invariant key
         /// </summary>
         /// <param name="keyword">The key to be looked for</param>
         /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">
         /// The property is retrieved and <paramref name="keyword" /> is not found.
         /// </exception>
         /// <returns>The keyword </returns>
-        public Keyword GetKeyword(string keyword) => _keywordDict[keyword];
+        public Keyword GetKeyword(string keyword) => _keywordDict[keyword.ToUpper()];
         
         internal Result<Keyword<T>> GetKeyword<T>()
         {
