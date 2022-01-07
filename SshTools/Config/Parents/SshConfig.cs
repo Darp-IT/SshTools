@@ -84,7 +84,7 @@ namespace SshTools.Config.Parents
                 var keyString = keyRes.Value;
                 if (!SshTools.Settings.HasKeyword(keyString))
                     return Result.Fail($"Unknown Keyword {keyRes.Value}");
-                var key = SshTools.Settings.GetKeyword(keyString.ToUpper());
+                var key = SshTools.Settings.GetKeyword(keyString);
                 
                 line = LineParser.TrimSeparator(line, out var separatorRes);
                 if (separatorRes.IsFailed) return separatorRes.ToResult();
