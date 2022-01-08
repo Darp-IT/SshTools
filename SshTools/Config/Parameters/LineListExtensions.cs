@@ -160,6 +160,10 @@ namespace SshTools.Config.Parameters
                     yield return line;
                     continue;
                 }
+                foreach (var comment in param.Comments.Comments)
+                {
+                    yield return comment;
+                }
                 if (param.Argument is IEnumerable<ILine> includeParams)
                 {
                     afterFirstHost = true;
@@ -188,30 +192,44 @@ namespace SshTools.Config.Parameters
         /// <summary>
         /// Collects all parameters and groups them in hosts
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to be collected from</param>
+        /// <param name="lines">A sequence of parameters to be collected from</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are the result of collecting</returns>
-        public static IEnumerable<ILine> Collect(this IEnumerable<ILine> parameters)
+        public static IEnumerable<ILine> Collect(this IEnumerable<ILine> lines)
         {
-            parameters.ThrowIfNull();
+            lines.ThrowIfNull();
             IArgParameter<ParameterParent> lastNode = null;
-            foreach (var parameter in parameters)
+            IList<Comment> comments = new List<Comment>();
+            foreach (var line in lines)
             {
-                if (parameter.IsNode() && parameter is IArgParameter<ParameterParent> parent)
+                if (line is Comment comment)
                 {
-                    if (lastNode != null)
-                        yield return lastNode;
-                    lastNode = parent;
+                    comments.Add(comment);
                 }
-                else
+                else if (line is IParameter param)
                 {
-                    if (lastNode != null) 
-                        lastNode.Argument.Add(parameter);
+                    param.Comments.AddRange(comments);
+                    comments.Clear();
+                    if (line.IsNode() && line is IArgParameter<ParameterParent> parent)
+                    {
+                        if (lastNode != null)
+                            yield return lastNode;
+                        lastNode = parent;
+                    }
                     else
-                        yield return parameter;
+                    {
+                        if (lastNode != null) 
+                            lastNode.Argument.Add(line);
+                        else
+                            yield return line;
+                    }
                 }
             }
             if (lastNode != null)
                 yield return lastNode;
+            foreach (var comment in comments)
+            {
+                yield return comment;
+            }
         }
 
         /// <summary>
@@ -342,6 +360,7 @@ namespace SshTools.Config.Parameters
         public static SshConfig ToConfig(this IEnumerable<ILine> parameters, string fileName = null)
         {
             parameters.ThrowIfNull();
+
             return new SshConfig(fileName, parameters.Collect().ToList());
         }
 

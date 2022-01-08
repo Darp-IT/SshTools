@@ -26,25 +26,25 @@ namespace SshTools.Config.Parents
         //-----------------------------------------------------------------------//
         
         private IList<ILine> Params { get; }
-        protected ILine Line { get; set; }
+        protected IParameter Parameter { get; set; }
         private readonly CommentList _commentsBacking = new CommentList();
 
         internal ParameterParent(IList<ILine> parameters = null) => 
             Params = parameters ?? new List<ILine>();
 
-        public void Connect(ILine param)
+        public void Connect(IParameter param)
         {
-            Line = param;
+            Parameter = param;
             if (_commentsBacking.Count <= 0) return;
-            // TODO Line.Comments.Clear();
-//            foreach (var c in _commentsBacking.Comments) 
-//                Line.Comments.Add(c.Comment, c.Spacing);
+            Parameter.Comments.Clear();
+            foreach (var c in _commentsBacking.Comments) 
+                Parameter.Comments.Add(c);
         }
-        public void Disconnect() => Line = null;
+        public void Disconnect() => Parameter = null;
         public CommentList Comments => IsConnected
-            ? _commentsBacking//Line.Comments
+            ? Parameter.Comments
             : _commentsBacking;
-        public bool IsConnected => Line != null;
+        public bool IsConnected => Parameter != null;
         
         public object this[Keyword keyword] => this.Get(keyword);
         public virtual string Serialize(SerializeConfigOptions options = SerializeConfigOptions.DEFAULT) => 

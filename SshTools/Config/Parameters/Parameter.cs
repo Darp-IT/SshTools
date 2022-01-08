@@ -30,7 +30,7 @@ namespace SshTools.Config.Parameters
             }
         }
 
-        public CommentList Comments => ParameterAppearance.HeaderList;
+        public CommentList Comments { get; private set; } = new CommentList();
         public ParameterAppearance ParameterAppearance { get; }
         
         internal Parameter(Keyword<T> keyword, T argument, ParameterAppearance appearance)
@@ -72,7 +72,10 @@ namespace SshTools.Config.Parameters
                 Argument is ICloneable cloneable
                     ? (T) cloneable.Clone()
                     : Argument,
-                (ParameterAppearance) ParameterAppearance.Clone());
+                (ParameterAppearance) ParameterAppearance.Clone())
+            {
+                Comments = Comments
+            };
 
         public override string ToString() => $"({Keyword}={Argument})";
         object ICloneable.Clone() => Clone();

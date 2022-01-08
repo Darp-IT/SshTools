@@ -27,7 +27,8 @@ namespace SshTools.Config.Parents
                     if (!(line is IParameter param)
                         || param.Keyword.AllowMultiple || !host.Has(param.Keyword))
                         host.Add(line);
-                }}
+                }
+            }
             return host;
         }
     }

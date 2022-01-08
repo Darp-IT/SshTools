@@ -12,7 +12,7 @@ namespace SshTools.Tests.Unit.Parents
     {
         [Theory]
         [InlineData(ConfigWithOneNode, 1, 2)]
-        [InlineData(ConfigWithTwoNodes, 2, 4)]
+        [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd, 3, 5)]
         [InlineData(ConfigWithParameterAndNodes, 3, 5)]
         public void Flatten_TestCounts(string configString, int expectedCount, int expectedFlattenedCount)
         {
@@ -27,7 +27,7 @@ namespace SshTools.Tests.Unit.Parents
         [Theory]
         [InlineData(ConfigWithOnlyANode)]
         [InlineData(ConfigWithOneNode)]
-        [InlineData(ConfigWithTwoNodes)]
+        [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd)]
         [InlineData(ConfigWithParameterAndNodes)]
         public void Cloned_TestSameSerialization(string configString)
         {
@@ -41,7 +41,7 @@ namespace SshTools.Tests.Unit.Parents
         
         [Theory]
         [InlineData(ConfigWithOneNode)]
-        [InlineData(ConfigWithTwoNodes)]
+        [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd)]
         [InlineData(ConfigWithParameterAndNodes)]
         public void Cloned_TestIndependence(string configString)
         {

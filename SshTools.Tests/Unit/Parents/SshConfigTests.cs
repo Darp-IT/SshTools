@@ -15,7 +15,7 @@ namespace SshTools.Tests.Unit.Parents
         [InlineData(ConfigWithOnlyOneComment)]
         [InlineData(ConfigWithOnlyANode)]
         [InlineData(ConfigWithOneNode)]
-        [InlineData(ConfigWithTwoNodes)]
+        [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd)]
         [InlineData(ConfigWithParameterAndNodes)]
         public void SerializeString_WithoutChangingConfig(string configString)
         {
@@ -32,7 +32,7 @@ namespace SshTools.Tests.Unit.Parents
         [InlineData(ConfigWithOnlyOneComment)]
         [InlineData(ConfigWithOnlyANode)]
         [InlineData(ConfigWithOneNode)]
-        [InlineData(ConfigWithTwoNodes)]
+        [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd)]
         [InlineData(ConfigWithParameterAndNodes)]
         public void SerializeString_AfterIssuingToConfig(string configString)
         {

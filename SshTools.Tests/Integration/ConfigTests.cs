@@ -37,10 +37,10 @@ namespace SshTools.Tests.Integration
         {
             SshTools.Configure(settings => settings.SetKeywords(Array.Empty<Keyword>()));
             var configRes = SshConfig.ReadFile("Integration/configs/config");
-            configRes.IsFailed.ShouldBeTrue();
+            configRes.Should().BeFailure();
             SshTools.Configure(settings => settings.SetKeywords(Keyword.Values));
             var configRes2 = SshConfig.ReadFile("Integration/configs/config");
-            configRes2.IsFailed.ShouldBeFalse();
+            configRes2.Should().BeSuccess();
         }
 
         /// One should be able to get a list of all nodes, with includes being stripped
@@ -88,9 +88,9 @@ namespace SshTools.Tests.Integration
         public void TestCompileConfig()
         {
             var config = LoadConfig("configs/config");
-            config.Count.ShouldEqual(8);
+            config.Count.ShouldEqual(9);
             var host = config.Compile();
-            host.Count.ShouldEqual(11);
+            host.Count.ShouldEqual(12);
         }
 
         /// One should be able to compile to a host, that has all parameters,
@@ -229,7 +229,7 @@ namespace SshTools.Tests.Integration
 
             //Config should return a list of parameters
             // All nodes (parameters and directives)
-            config.Count.ShouldEqual(8);
+            config.Count.ShouldEqual(9);
 
             //Hosts
             config.Count(p => p.IsHost()).ShouldEqual(4);

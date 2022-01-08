@@ -17,7 +17,7 @@ namespace SshTools.Tests.Unit
         public const string ConfigWithOneNode = 
             "Host host1\n" + 
             "  User user1";
-        public const string ConfigWithTwoNodes =
+        public const string ConfigWithTwoNodesAndCommentAtTheEnd =
             "Host host1\n" + 
             "  User user1\n" + 
             "Host host2\n" + 

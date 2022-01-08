@@ -11,7 +11,7 @@ namespace SshTools.Config.Parameters
         public const bool DefaultUseQuoting = false;
         
         //  Type
-        public CommentList HeaderList { get; }
+        //public CommentList HeaderList { get; }
         public string SpacingFront { get; }
         public string Keyword { get; }
         public string Separator { get; }
@@ -20,9 +20,9 @@ namespace SshTools.Config.Parameters
         public string SpacingBack { get; }
         
         
-        public ParameterAppearance(CommentList headerList, string spacingFront, string keyword, string separator, bool isQuoted, string spacingBack)
+        public ParameterAppearance(string spacingFront, string keyword, string separator, bool isQuoted, string spacingBack)
         {
-            HeaderList = headerList;
+            //HeaderList = headerList;
             SpacingFront = spacingFront;
             Separator = separator;
             IsQuoted = isQuoted;
@@ -39,7 +39,7 @@ namespace SshTools.Config.Parameters
 
         public static ParameterAppearance Default(Keyword keyword) => 
             new ParameterAppearance(
-                new CommentList(), 
+                //new CommentList(), 
                 DefaultFrontSpacing,
                 keyword.Name,
                 DefaultSeparator,

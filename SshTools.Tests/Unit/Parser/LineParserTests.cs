@@ -27,6 +27,9 @@ namespace SshTools.Tests.Unit.Parser
         [InlineData("  host=hostName", "  ", "host=hostName")]
         [InlineData("	Host	hostName", "	", "Host	hostName")]
         [InlineData("  	 HOST  =  hostName", "  	 ", "HOST  =  hostName")]
+        [InlineData("   ", "   ", "")]
+        [InlineData("# asd", "", "# asd")]
+        [InlineData("   #   ", "   ", "#   ")]
         public void TrimFront_TestLines(string line, string expected, string expLine)
         {
             var line2 = LineParser.TrimFront(line, out var res);

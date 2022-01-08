@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentResults;
+using SshTools.Config.Exceptions;
 using SshTools.Config.Parameters;
 using SshTools.Config.Parser;
 using SshTools.Config.Util;
@@ -12,7 +13,6 @@ namespace SshTools.Config.Parents
     public class SshConfig : ParameterParent
     {
         public string FileName { get; private set; }
-        private readonly IList<string> _footer = new List<string>();
 
         /// <summary>
         /// Create a new SshConfig
@@ -30,7 +30,6 @@ namespace SshTools.Config.Parents
         {
             var lines = new List<string>();
             lines.AddRange(this.Select(p => p.Serialize(options)));
-            lines.AddRange(_footer);
             return string.Join(Environment.NewLine, lines);
         }
         
@@ -49,19 +48,11 @@ namespace SshTools.Config.Parents
         /// <param name="str">Config string</param>
         /// <param name="fileName"></param>
         /// <returns>SshConfig</returns>
-        public static Result<SshConfig> DeserializeString(string str, string fileName = null)
-        {
-            var config = new SshConfig(fileName);
-            var res = config.Deserialize(str);
-            return res.IsSuccess
-                ? Result.Ok(config)
-                : res.ToResult<SshConfig>();
-        }
+        public static Result<SshConfig> DeserializeString(string str, string fileName = null) => 
+            Result.Try(() => Deserialized(str).ToConfig(fileName));
 
-        private Result Deserialize(string configString)
+        private static IEnumerable<ILine> Deserialized(string configString)
         {
-            var comments = new CommentList();
-            ParameterParent lastNode = this;
             foreach (var l in configString.Split('\n'))
             {
                 var line = l.Replace("\r", "");
@@ -70,29 +61,33 @@ namespace SshTools.Config.Parents
                 {
                     var comment = LineParser.TrimFront(line, out var spacingComment);
 
-                    comments.Add(comment.StartsWith("#") 
-                            ? comment.Substring(1, comment.Length - 1) 
-                            : comment, 
+                    yield return new Comment(
+                        comment.StartsWith("#")
+                            ? comment.Substring(1, comment.Length - 1)
+                            : comment,
                         spacingComment);
                     continue;
                 }
+
                 line = LineParser.TrimFront(line, out var spacingFront);
-                
+
                 line = LineParser.TrimKey(line, out var keyRes);
-                if (keyRes.IsFailed) return keyRes.ToResult();
+                if (keyRes.IsFailed)
+                    throw new ResultException(keyRes);
 
                 var keyString = keyRes.Value;
                 if (!SshTools.Settings.HasKeyword(keyString))
-                    return Result.Fail($"Unknown Keyword {keyRes.Value}");
+                    throw new Exception($"Unknown Keyword {keyRes.Value}");
+
                 var key = SshTools.Settings.GetKeyword(keyString);
-                
+
                 line = LineParser.TrimSeparator(line, out var separatorRes);
-                if (separatorRes.IsFailed) return separatorRes.ToResult();
+                if (separatorRes.IsFailed)
+                    throw new ResultException(separatorRes);
 
                 var spacingBack = LineParser.TrimArgument(line, out var argumentRes, out var quoted);
 
                 var appearance = new ParameterAppearance(
-                    comments.ToCommentList(),
                     spacingFront,
                     keyString,
                     separatorRes.Value,
@@ -100,21 +95,10 @@ namespace SshTools.Config.Parents
                     spacingBack
                 );
                 var paramRes = key.GetParameter(argumentRes, appearance);
-                if (paramRes.IsFailed) return paramRes.ToResult();
-                var param = paramRes.Value;
-                if (param.Argument is Node node)
-                {
-                    lastNode = node;
-                    Add(param);
-                }
-                else
-                {
-                    lastNode.Add(param);
-                }
-                comments.Clear();
+                if (paramRes.IsFailed)
+                    throw new ResultException(paramRes);
+                yield return paramRes.Value;
             }
-            foreach (var comment in comments) _footer.Add(comment);
-            return Result.Ok();
         }
         
         public override object Clone()

@@ -4,7 +4,7 @@ namespace SshTools.Config.Util
 {
     public interface IConnectable
     {
-        void Connect(ILine line);
+        void Connect(IParameter line);
         void Disconnect();
     }
 }
