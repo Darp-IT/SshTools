@@ -1,4 +1,7 @@
-﻿namespace SshTools.Tests.Unit
+﻿using FluentResults.Extensions.FluentAssertions;
+using SshTools.Config.Parents;
+
+namespace SshTools.Tests.Unit
 {
     public static class ConfigResources
     {
@@ -25,5 +28,13 @@
             "  User user1\n" + 
             "Host host2\n" + 
             "  Port 12345   ";
+        
+        public static SshConfig DeserializeString(string configString)
+        {
+            var res = SshConfig.DeserializeString(configString);
+
+            res.Should().BeSuccess();
+            return res.Value;
+        }
     }
 }

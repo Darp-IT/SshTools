@@ -14,7 +14,7 @@ namespace SshTools.Config.Parents
 
         private readonly IList<CriteriaWrapper> _criteria = new List<CriteriaWrapper>();
         
-        public MatchNode(IList<IParameter> parameters = null)
+        public MatchNode(IList<ILine> parameters = null)
             : base(parameters)
         {
             
@@ -65,7 +65,7 @@ namespace SshTools.Config.Parents
             var node = new MatchNode(
                 this
                     .Select(p => p is ICloneable cloneable 
-                        ? (IParameter) cloneable.Clone() 
+                        ? (ILine) cloneable.Clone() 
                         : p)
                     .ToList()
             );
@@ -73,12 +73,12 @@ namespace SshTools.Config.Parents
             return node;
         }
 
-        internal override Result<IParameter> GetParam()
+        internal override Result<ILine> GetParam()
         {
             var res = SshTools.Settings.GetKeyword<MatchNode>();
             return res.IsFailed
-                ? res.ToResult<IParameter>()
-                : Result.Ok<IParameter>(res.Value.GetParam(this, ParameterAppearance.Default(res.Value)));
+                ? res.ToResult<ILine>()
+                : Result.Ok<ILine>(res.Value.GetParam(this, ParameterAppearance.Default(res.Value)));
         }
 
         internal override Node Copy()

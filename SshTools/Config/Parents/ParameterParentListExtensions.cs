@@ -22,10 +22,11 @@ namespace SshTools.Config.Parents
                 foreach (var parentComment in parent.Comments)
                     if (!string.IsNullOrWhiteSpace(parentComment))
                         host.Comments.Add(parentComment);
-                foreach (var param in parent)
+                foreach (var line in parent)
                 {
-                    if (param.Keyword.AllowMultiple || !host.Has(param.Keyword))
-                        host.Add(param);
+                    if (!(line is IParameter param)
+                        || param.Keyword.AllowMultiple || !host.Has(param.Keyword))
+                        host.Add(line);
                 }}
             return host;
         }

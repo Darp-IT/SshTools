@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using FluentResults.Extensions.FluentAssertions;
 using SshTools.Config.Matching;
 using SshTools.Config.Parameters;
 using SshTools.Config.Parents;
@@ -24,8 +25,8 @@ namespace SshTools.Tests.Integration
 
         private static SshConfig LoadConfig(string name, bool compile = false)
         {
-            var configRes = SshConfig.ReadFile(name);
-            configRes.IsSuccess.ShouldBeTrue();
+            var configRes = SshConfig.ReadFile("Integration/" + name);
+            configRes.Should().BeSuccess();
             return compile
                 ? configRes.Value.Compile()
                 : configRes.Value;
@@ -35,10 +36,10 @@ namespace SshTools.Tests.Integration
         public void TestConfigure()
         {
             SshTools.Configure(settings => settings.SetKeywords(Array.Empty<Keyword>()));
-            var configRes = SshConfig.ReadFile("configs/config");
+            var configRes = SshConfig.ReadFile("Integration/configs/config");
             configRes.IsFailed.ShouldBeTrue();
             SshTools.Configure(settings => settings.SetKeywords(Keyword.Values));
-            var configRes2 = SshConfig.ReadFile("configs/config");
+            var configRes2 = SshConfig.ReadFile("Integration/configs/config");
             configRes2.IsFailed.ShouldBeFalse();
         }
 
@@ -52,6 +53,7 @@ namespace SshTools.Tests.Integration
                 .ToConfig();
 
             config
+                .OfParameter()
                 .Count(p => p.IsInclude() || p.Argument is Node node && node.Has(Keyword.Include))
                 .ShouldEqual(2);
             includedConfig
@@ -357,6 +359,7 @@ namespace SshTools.Tests.Integration
         {
             var config = LoadConfig("configs/config");
             var dummyParam = config
+                .OfParameter()
                 .First(p => p.Argument is HostNode {MatchString: "dummy"});
             var dummyCompiledHost = config.Find("dummy");
             var dummyConfigHost = config.GetAll("dummy")[1] as HostNode;

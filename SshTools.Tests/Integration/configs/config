@@ -1,6 +1,6 @@
 ﻿
 IdentitiesOnly=yes
-Include configs/config_start
+Include Integration/configs/config_start
 ### dummy host
 Host dummy
   HostName       ="unknown"
@@ -18,7 +18,7 @@ Match host 1.1.1.1
 ### MyJumpHost
 Host jumphost
   # Comment for include
-  Include    configs/config_jumphost
+  Include    Integration/configs/config_jumphost
   User testuser2
   
 # Every user should have this jump

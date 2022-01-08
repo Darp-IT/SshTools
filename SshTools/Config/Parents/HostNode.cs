@@ -10,7 +10,7 @@ namespace SshTools.Config.Parents
 {
     public class HostNode : Node
     {
-        public HostNode(string matchString, IList<IParameter> parameters = null)
+        public HostNode(string matchString, IList<ILine> parameters = null)
             : base(parameters)
         {
             MatchString = matchString;
@@ -24,19 +24,19 @@ namespace SshTools.Config.Parents
                 MatchString, 
                 this
                     .Select(p => p is ICloneable cloneable 
-                        ? (IParameter) cloneable.Clone() 
+                        ? (ILine) cloneable.Clone() 
                         : p)
                     .ToList()
                 );
         }
 
 
-        internal override Result<IParameter> GetParam()
+        internal override Result<ILine> GetParam()
         {
             var res = SshTools.Settings.GetKeyword<HostNode>();
             return res.IsFailed
-                ? res.ToResult<IParameter>()
-                : Result.Ok<IParameter>(res.Value.GetParam(this, ParameterAppearance.Default(res.Value)));
+                ? res.ToResult<ILine>()
+                : Result.Ok<ILine>(res.Value.GetParam(this, ParameterAppearance.Default(res.Value)));
         }
 
         internal override Node Copy() => new HostNode(MatchString);

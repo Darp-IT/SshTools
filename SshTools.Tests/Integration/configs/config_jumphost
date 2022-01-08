@@ -14,4 +14,4 @@ Host test
   ## stuff of the test host
   Port=54321
   User       = testuser
-  Include configs/config_start
+  Include Integration/configs/config_start

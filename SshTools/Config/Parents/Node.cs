@@ -9,7 +9,7 @@ namespace SshTools.Config.Parents
 {
     public abstract class Node : ParameterParent
     {
-        protected Node(IList<IParameter> parameters = null)
+        protected Node(IList<ILine> parameters = null)
             : base(parameters)
         {
             
@@ -26,7 +26,7 @@ namespace SshTools.Config.Parents
                 : MatchString + Environment.NewLine + serializedBase;
         }
 
-        internal abstract Result<IParameter> GetParam();
+        internal abstract Result<ILine> GetParam();
         internal abstract Node Copy();
 
         public abstract bool Matches(string search, MatchingContext context, MatchingOptions options);

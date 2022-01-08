@@ -66,7 +66,7 @@ namespace SshTools.Config.Parameters
             return string.Join(Environment.NewLine, lines);
         }
 
-        public IParameter Clone() =>
+        public ILine Clone() =>
             new Parameter<T>(
                 Keyword,
                 Argument is ICloneable cloneable

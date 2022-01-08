@@ -20,7 +20,7 @@ namespace SshTools.Config.Parents
         /// <param name="fileName"></param>
         /// <param name="parameters"></param>
         /// <exception cref="ArgumentException">Throws argument exception, if there is no HOST/MATCH keyword defined</exception>
-        public SshConfig(string fileName = null, IList<IParameter> parameters = null)
+        public SshConfig(string fileName = null, IList<ILine> parameters = null)
             : base(parameters)
         {
             FileName = fileName;

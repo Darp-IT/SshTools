@@ -17,7 +17,8 @@ namespace SshTools.Config.Parents
         {
             for (var i = 0; i < sshConfig.Count; i++)
             {
-                if (sshConfig[i].Argument is Node node && node.MatchString.Equals(hostName))
+                if (!(sshConfig[i] is IParameter param)) continue;
+                if (param.Argument is Node node && node.MatchString.Equals(hostName))
                     return i;
             }
             return -1;
@@ -98,7 +99,7 @@ namespace SshTools.Config.Parents
                 : desRes;
         }
 
-        public static void Remove(this SshConfig config, Func<IParameter, bool> func, int maxCount = int.MaxValue)
+        public static void Remove(this SshConfig config, Func<ILine, bool> func, int maxCount = int.MaxValue)
         {
             config.ThrowIfNull();
             func.ThrowIfNull();
