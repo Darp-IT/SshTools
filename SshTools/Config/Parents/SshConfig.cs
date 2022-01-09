@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentResults;
+using SshTools.Config.Exceptions;
 using SshTools.Config.Matching;
 using SshTools.Config.Parameters;
+using SshTools.Config.Parser;
 using SshTools.Config.Util;
 
 namespace SshTools.Config.Parents
@@ -34,7 +36,64 @@ namespace SshTools.Config.Parents
         /// <param name="fileName">An optional path that will be provided to the config for serialization</param>
         /// <returns><see cref="Result{TValue}"/> of type <see cref="SshConfig"/></returns>
         public static Result<SshConfig> DeserializeString(string str, string fileName = null) => 
-            Result.Try(() => str.Deserialized().ToConfig(fileName));
+            Result.Try(() => Deserialized(str).ToConfig(fileName));
+        
+        /// <summary>
+        /// Deserializes a string into a sequence of lines
+        /// </summary>
+        /// <param name="configString">The given string, that represents a ssh config</param>
+        /// <returns>A sequence of lines representing <paramref name="configString"/></returns>
+        /// <exception cref="ResultException">Thrown if something goes wrong while parsing</exception>
+        /// <exception cref="Exception">Thrown if something goes wrong while parsing</exception>
+        private static IEnumerable<ILine> Deserialized(string configString)
+        {
+            foreach (var l in configString.Split('\n'))
+            {
+                var line = l.Replace("\r", "");
+                // Go for all comments (empty lines and comments, that are being stripped of their first #)
+                if (LineParser.IsConfigComment(line))
+                {
+                    var comment = LineParser.TrimFront(line, out var spacingComment);
+
+                    yield return new Comment(
+                        comment.StartsWith("#")
+                            ? comment.Substring(1, comment.Length - 1)
+                            : comment,
+                        spacingComment);
+                    continue;
+                }
+
+                line = LineParser.TrimFront(line, out var spacingFront);
+
+                line = LineParser.TrimKey(line, out var keyRes);
+                if (keyRes.IsFailed)
+                    throw new ResultException(keyRes.WithError($"While parsing line '{l}'"));
+
+                var keyString = keyRes.Value;
+                if (!SshTools.Settings.HasKeyword(keyString))
+                    throw new Exception($"Unknown Keyword {keyRes.Value} while parsing line '{l}'");
+
+                var key = SshTools.Settings.GetKeyword(keyString);
+
+                line = LineParser.TrimSeparator(line, out var separatorRes);
+                if (separatorRes.IsFailed)
+                    throw new ResultException(separatorRes.WithError($"While parsing line '{l}'"));
+
+                var spacingBack = LineParser.TrimArgument(line, out var argumentRes, out var quoted);
+
+                var appearance = new ParameterAppearance(
+                    spacingFront,
+                    keyString,
+                    separatorRes.Value,
+                    quoted,
+                    spacingBack
+                );
+                var paramRes = key.GetParameter(argumentRes, appearance);
+                if (paramRes.IsFailed)
+                    throw new ResultException(paramRes.WithError($"While parsing line '{l}'"));
+                yield return paramRes.Value;
+            }
+        }
         
         //-----------------------------------------------------------------------//
         //                          SshConfig class

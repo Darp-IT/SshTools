@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentResults;
-using SshTools.Config.Exceptions;
 using SshTools.Config.Extensions;
 using SshTools.Config.Matching;
 using SshTools.Config.Parameters;
-using SshTools.Config.Parser;
 using SshTools.Config.Util;
 
 namespace SshTools.Config.Parents
@@ -76,7 +74,7 @@ namespace SshTools.Config.Parents
         /// If the <paramref name="index"/> is negative the insertion will be counted from the back
         /// </summary>
         /// <param name="lines">A sequence of lines to be inserted to</param>
-        /// <param name="index">The index to be inserted at in range [ -Count; Count-1 ]</param>
+        /// <param name="index">The index to be inserted at in range [ -(Count+1); Count-1 ]</param>
         /// <param name="keyword">The keyword to insert</param>
         /// <param name="value">The value to be inserted</param>
         /// <param name="ignoreCount">Whether the insertion will be executed if a keyword, that is only allowed once,
@@ -121,22 +119,44 @@ namespace SshTools.Config.Parents
             param.Argument = value;
             return Result.Ok(value);
         }
-        
+
         /// <summary>
-        /// Removes the first matching entry in the given sequence
+        /// Removes <paramref name="maxCount"/> of lines, that fulfill the <paramref name="func"/>
+        /// </summary>
+        /// <param name="lines">The sequence of lines to be removed from</param>
+        /// <param name="func">The predicate to be matched</param>
+        /// <param name="maxCount">The maximum of lines to be removed</param>
+        /// <returns>The number of removed lines</returns>
+        public static int Remove(this IList<ILine> lines, Func<ILine, bool> func, int maxCount = int.MaxValue)
+        {
+            lines.ThrowIfNull();
+            func.ThrowIfNull();
+            var i = 0;
+            var count = 0;
+            while (i < lines.Count && count < maxCount)
+            {
+                if (func(lines[i]))
+                {
+                    lines.RemoveAt(i);
+                    count++;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Removes the first <paramref name="maxCount"/> matching entries in the given sequence
         /// </summary>
         /// <param name="lines">A sequence of lines to be removed from</param>
         /// <param name="keyword">The <see cref="Keyword"/> to be removed</param>
-        /// <returns><see cref="Result{TValue}"/> with optional reason for failure</returns>
-        public static Result Remove(this IList<ILine> lines, Keyword keyword)
-        {
-            lines.ThrowIfNull();
-            keyword.ThrowIfNull();
-            var index = lines.IndexOf(keyword);
-            if (index < 0) return Result.Fail("Keyword not available");
-            lines.RemoveAt(index);
-            return Result.Ok();
-        }
+        /// <param name="maxCount">Maximum count of items to be removed. Default is only 1!</param>
+        /// <returns>Number of removed lines with matching keyword</returns>
+        public static int Remove(this IList<ILine> lines, Keyword keyword, int maxCount = 1) =>
+            lines.Remove(l => l.Is(keyword), maxCount);
 
         //-----------------------------------------------------------------------//
         //                      Basic Functions for ParameterParents
@@ -198,7 +218,7 @@ namespace SshTools.Config.Parents
         /// Inserts a new <see cref="HostNode"/> of given <paramref name="hostName"/> at <paramref name="index"/>
         /// </summary>
         /// <param name="lines">The list of lines to be set to</param>
-        /// <param name="index">The index to be inserted at in range [ -Count; Count-1 ]</param>
+        /// <param name="index">The index to be inserted at in range [ -(Count+1); Count-1 ]</param>
         /// <param name="hostName">The name of the new Host</param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Host</returns>
         public static Result<HostNode> InsertHost(this IList<ILine> lines, int index, string hostName) =>
@@ -208,7 +228,7 @@ namespace SshTools.Config.Parents
         /// Inserts a new <see cref="MatchNode"/> at <paramref name="index"/> with a new <see cref="Criteria"/>
         /// </summary>
         /// <param name="lines">The list of lines to be inserted at</param>
-        /// <param name="index">The index to be inserted at in range [ -Count; Count-1 ]</param>
+        /// <param name="index">The index to be inserted at in range [ -(Count+1); Count-1 ]</param>
         /// <param name="criteria">The criteria of the match</param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Match</returns>
         public static Result<MatchNode> InsertMatch(this IList<ILine> lines, int index, Criteria criteria)
@@ -222,7 +242,7 @@ namespace SshTools.Config.Parents
         /// Inserts a new <see cref="MatchNode"/> at <paramref name="index"/> with a new <see cref="Criteria"/>
         /// </summary>
         /// <param name="lines">The list of lines to be inserted at</param>
-        /// <param name="index">The index to be inserted at in range [ -Count; Count-1 ]</param>
+        /// <param name="index">The index to be inserted at in range [ -(Count+1); Count-1 ]</param>
         /// <param name="criteria">The criteria of the match</param>
         /// <param name="argument">The argument of the <paramref name="criteria"/></param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Match</returns>
@@ -302,34 +322,6 @@ namespace SshTools.Config.Parents
             var match = new MatchNode();
             match.Set(criteria, argument);
             return lines.SetNode(match);
-        }
-
-        /// <summary>
-        /// Removes <paramref name="maxCount"/> of lines, that fulfill the <paramref name="func"/>
-        /// </summary>
-        /// <param name="lines">The sequence of lines to be removed from</param>
-        /// <param name="func">The predicate to be matched</param>
-        /// <param name="maxCount">The maximum of lines to be removed</param>
-        /// <returns>The number of removed lines</returns>
-        public static int Remove(this IList<ILine> lines, Func<ILine, bool> func, int maxCount = int.MaxValue)
-        {
-            lines.ThrowIfNull();
-            func.ThrowIfNull();
-            var i = 0;
-            var count = 0;
-            while (i < lines.Count && count < maxCount)
-            {
-                if (func(lines[i]))
-                {
-                    lines.RemoveAt(i);
-                    count++;
-                }
-                else
-                {
-                    i++;
-                }
-            }
-            return count;
         }
 
         /// <summary>
@@ -720,62 +712,6 @@ namespace SshTools.Config.Parents
             filename.ThrowIfNull();
             return Result.Try(() => 
                 File.WriteAllText(filename, lines.Serialize()));
-        }
-        /// <summary>
-        /// Deserializes a string into a sequence of lines
-        /// </summary>
-        /// <param name="configString">The given string, that represents a ssh config</param>
-        /// <returns>A sequence of lines representing <paramref name="configString"/></returns>
-        /// <exception cref="ResultException">Thrown if something goes wrong while parsing</exception>
-        /// <exception cref="Exception">Thrown if something goes wrong while parsing</exception>
-        internal static IEnumerable<ILine> Deserialized(this string configString)
-        {
-            foreach (var l in configString.Split('\n'))
-            {
-                var line = l.Replace("\r", "");
-                // Go for all comments (empty lines and comments, that are being stripped of their first #)
-                if (LineParser.IsConfigComment(line))
-                {
-                    var comment = LineParser.TrimFront(line, out var spacingComment);
-
-                    yield return new Comment(
-                        comment.StartsWith("#")
-                            ? comment.Substring(1, comment.Length - 1)
-                            : comment,
-                        spacingComment);
-                    continue;
-                }
-
-                line = LineParser.TrimFront(line, out var spacingFront);
-
-                line = LineParser.TrimKey(line, out var keyRes);
-                if (keyRes.IsFailed)
-                    throw new ResultException(keyRes.WithError($"While parsing line '{l}'"));
-
-                var keyString = keyRes.Value;
-                if (!SshTools.Settings.HasKeyword(keyString))
-                    throw new Exception($"Unknown Keyword {keyRes.Value} while parsing line '{l}'");
-
-                var key = SshTools.Settings.GetKeyword(keyString);
-
-                line = LineParser.TrimSeparator(line, out var separatorRes);
-                if (separatorRes.IsFailed)
-                    throw new ResultException(separatorRes.WithError($"While parsing line '{l}'"));
-
-                var spacingBack = LineParser.TrimArgument(line, out var argumentRes, out var quoted);
-
-                var appearance = new ParameterAppearance(
-                    spacingFront,
-                    keyString,
-                    separatorRes.Value,
-                    quoted,
-                    spacingBack
-                );
-                var paramRes = key.GetParameter(argumentRes, appearance);
-                if (paramRes.IsFailed)
-                    throw new ResultException(paramRes.WithError($"While parsing line '{l}'"));
-                yield return paramRes.Value;
-            }
         }
     }
 }

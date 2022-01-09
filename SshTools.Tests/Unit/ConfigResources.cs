@@ -36,6 +36,10 @@ namespace SshTools.Tests.Unit
             "Port 12345\n" +
             "Host host2\n" +
             "Match all";
+
+        public const string ConfigWithUserAtTheStart =
+            "User user1\n" +
+            "HostName host1";
         
         public static SshConfig DeserializeString(string configString)
         {

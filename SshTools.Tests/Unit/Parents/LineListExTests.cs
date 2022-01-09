@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using FluentAssertions;
-using SshTools.Config.Parameters;
 using SshTools.Config.Parents;
 using Xunit;
 
@@ -17,7 +16,7 @@ namespace SshTools.Tests.Unit.Parents
         public void Flatten_TestCounts(string configString, int expectedCount, int expectedFlattenedCount)
         {
             var config = DeserializeString(configString);
-
+            
             var flattened = config.Flatten();
 
             config.Should().HaveCount(expectedCount);
