@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using FluentResults;
 
 namespace SshTools.Config.Extensions
 {

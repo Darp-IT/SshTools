@@ -257,13 +257,13 @@ namespace SshTools.Tests.Integration
 
             // Host (insert at position or add at the very beginning using indexing)
             Assert.Null(config["testhost"]);
-            var res = config.Insert(0, Keyword.Host, "testhost");
+            var res = config.InsertHost(0, "testhost");
             res.IsSuccess.ShouldBeTrue();
             config.Has("testhost");
 
             // Match
             config.Matches().Count.ShouldEqual(0);
-            var res2 = config.Set(Keyword.Match, "");
+            var res2 = config.SetMatch(Criteria.All);
             res2.IsSuccess.ShouldBeTrue();
             config.Matches().Count.ShouldEqual(1);
         }
@@ -305,9 +305,8 @@ namespace SshTools.Tests.Integration
                     host.User = "user1";
                     host.Comments.Add("This is a test host");
                 })
-                .PushMatch(match =>
+                .PushMatch(Criteria.All, match =>
                 {
-                    match.Set(Criteria.All);
                     match.User = "user3";
                 })
                 .PushHost("host2", host => { host.Set(Keyword.User, "user2"); });
@@ -330,15 +329,6 @@ namespace SshTools.Tests.Integration
             config.Count(param => param.IsMatch())
                 .ShouldEqual(2);
         }
-
-        /// One should be able to create a new config
-        [Fact]
-        public void TestCreateAFreshConfig()
-        {
-            var config = new SshConfig();
-            Assert.NotNull(config);
-        }
-
         [Fact]
         public void TestFindAll()
         {
@@ -389,14 +379,6 @@ namespace SshTools.Tests.Integration
             config.Set(Keyword.Host, dummyCompiledHost);
             dummyCompiledHost.IsConnected.ShouldBeTrue();
             config.Get("dummy").Comments[0].ShouldEqual("Compiled test");
-        }
-
-        [Fact]
-        public void TestDataTypes()
-        {
-            var config = LoadConfig("configs/config");
-            config.Get(Keyword.IdentitiesOnly).ShouldEqual(true);
-            config.IdentitiesOnly.ShouldEqual(true);
         }
     }
 }

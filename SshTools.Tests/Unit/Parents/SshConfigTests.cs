@@ -9,6 +9,13 @@ namespace SshTools.Tests.Unit.Parents
 {
     public class SshConfigTests
     {
+        [Fact]
+        public void TestCreateAFreshConfig()
+        {
+            var config = new SshConfig();
+            Assert.NotNull(config);
+        }
+        
         [Theory]
         [InlineData(ConfigWithoutAnything)]
         [InlineData(ConfigWithOnlyOneLinebreak)]

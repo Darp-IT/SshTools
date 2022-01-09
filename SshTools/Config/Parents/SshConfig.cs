@@ -3,16 +3,43 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentResults;
-using SshTools.Config.Exceptions;
+using SshTools.Config.Matching;
 using SshTools.Config.Parameters;
-using SshTools.Config.Parser;
 using SshTools.Config.Util;
 
 namespace SshTools.Config.Parents
 {
     public class SshConfig : ParameterParent
     {
-        public string FileName { get; private set; }
+        //-----------------------------------------------------------------------//
+        //                         Static Members getters
+        //-----------------------------------------------------------------------//
+        
+        /// <summary>
+        /// Parses a file by path.
+        /// </summary>
+        /// <param name="path">Path to file</param>
+        /// <returns><see cref="Result{TValue}"/> of type <see cref="SshConfig"/></returns>
+        public static Result<SshConfig> ReadFile(string path)
+        {
+            var readRes = Result.Try(() => File.ReadAllText(path));
+            return readRes.IsFailed
+                ? readRes.ToResult<SshConfig>()
+                : DeserializeString(readRes.Value, path);
+        }
+        /// <summary>
+        /// Parses the SSH config text.
+        /// </summary>
+        /// <param name="str">Config string</param>
+        /// <param name="fileName">An optional path that will be provided to the config for serialization</param>
+        /// <returns><see cref="Result{TValue}"/> of type <see cref="SshConfig"/></returns>
+        public static Result<SshConfig> DeserializeString(string str, string fileName = null) => 
+            Result.Try(() => str.Deserialized().ToConfig(fileName));
+        
+        //-----------------------------------------------------------------------//
+        //                          SshConfig class
+        //-----------------------------------------------------------------------//
+        public string FileName { get; }
 
         /// <summary>
         /// Create a new SshConfig
@@ -32,75 +59,7 @@ namespace SshTools.Config.Parents
             lines.AddRange(this.Select(p => p.Serialize(options)));
             return string.Join(Environment.NewLine, lines);
         }
-        
-        /// Parses a file by path.
-        /// <param name="path">Path to file</param>
-        /// <returns>SshConfig</returns>
-        public static Result<SshConfig> ReadFile(string path)
-        {
-            var readRes = Result.Try(() => File.ReadAllText(path));
-            return readRes.IsFailed
-                ? readRes.ToResult<SshConfig>()
-                : DeserializeString(readRes.Value, path);
-        }
 
-        /// Parses the SSH config text.
-        /// <param name="str">Config string</param>
-        /// <param name="fileName"></param>
-        /// <returns>SshConfig</returns>
-        public static Result<SshConfig> DeserializeString(string str, string fileName = null) => 
-            Result.Try(() => Deserialized(str).ToConfig(fileName));
-
-        private static IEnumerable<ILine> Deserialized(string configString)
-        {
-            foreach (var l in configString.Split('\n'))
-            {
-                var line = l.Replace("\r", "");
-                // Go for all comments (empty lines and comments, that are being stripped of their first #)
-                if (LineParser.IsConfigComment(line))
-                {
-                    var comment = LineParser.TrimFront(line, out var spacingComment);
-
-                    yield return new Comment(
-                        comment.StartsWith("#")
-                            ? comment.Substring(1, comment.Length - 1)
-                            : comment,
-                        spacingComment);
-                    continue;
-                }
-
-                line = LineParser.TrimFront(line, out var spacingFront);
-
-                line = LineParser.TrimKey(line, out var keyRes);
-                if (keyRes.IsFailed)
-                    throw new ResultException(keyRes);
-
-                var keyString = keyRes.Value;
-                if (!SshTools.Settings.HasKeyword(keyString))
-                    throw new Exception($"Unknown Keyword {keyRes.Value}");
-
-                var key = SshTools.Settings.GetKeyword(keyString);
-
-                line = LineParser.TrimSeparator(line, out var separatorRes);
-                if (separatorRes.IsFailed)
-                    throw new ResultException(separatorRes);
-
-                var spacingBack = LineParser.TrimArgument(line, out var argumentRes, out var quoted);
-
-                var appearance = new ParameterAppearance(
-                    spacingFront,
-                    keyString,
-                    separatorRes.Value,
-                    quoted,
-                    spacingBack
-                );
-                var paramRes = key.GetParameter(argumentRes, appearance);
-                if (paramRes.IsFailed)
-                    throw new ResultException(paramRes);
-                yield return paramRes.Value;
-            }
-        }
-        
         public override object Clone()
         {
             var parent = new SshConfig();
@@ -109,6 +68,42 @@ namespace SshTools.Config.Parents
             return parent;
         }
 
+        //-----------------------------------------------------------------------//
+        //                   SshConfig specific functionality
+        //-----------------------------------------------------------------------//
+        
+        /// <summary>
+        /// Getter only, gets first host by looking for <paramref name="hostName"/>
+        /// </summary>
+        /// <param name="hostName">The name of the Host to be searched for</param>
         public HostNode this[string hostName] => this.Get(hostName);
+        
+        /// <summary>
+        /// Gets a list of references to all <see cref="Node"/>s including the <see cref="SshConfig"/> at index [0]
+        /// </summary>
+        /// <param name="name">The name to be searched by</param>
+        /// <param name="options">Searching options</param>
+        /// <returns>A list of matching nodes with the config at position 0</returns>
+        public IList<ParameterParent> GetAll(string name, MatchingOptions options = MatchingOptions.MATCHING)
+        {
+            var list = new List<ParameterParent> { this };
+            foreach (var parameter in this.Matching(name, options))
+            {
+                if (parameter.Argument is Node parent)
+                    list.Add(parent);
+            }
+            return list;
+        }
+        
+        /// <summary>
+        /// Gets a list of all nodes as reference including <see cref="SshConfig"/> at index [0]
+        /// </summary>
+        /// <returns>List of nodes</returns>
+        public IList<ParameterParent> GetAll()
+        {
+            var list = new List<ParameterParent> { this};
+            list.AddRange(this.Nodes());
+            return list;
+        }
     }
 }

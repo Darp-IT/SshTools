@@ -20,7 +20,7 @@ namespace SshTools.Config.Parser
         
         public static readonly ArgumentParser<SshConfig> SshConfig = new ArgumentParser<SshConfig>(
             Parents.SshConfig.ReadFile,
-            (value, options) => value.FileName
+            (value, options) => value.FileName ?? value.Serialize(options)
         );
         
         public static readonly ArgumentParser<string> String = new ArgumentParser<string>(
@@ -40,7 +40,7 @@ namespace SshTools.Config.Parser
                     case "no":
                         return Result.Ok(false);
                     default:
-                        return Result.Fail<bool>($"Invalid input {str}");
+                        return Result.Fail<bool>($"Could not parse argument. Got invalid invalid input string '{str}'!");
                 }
             }, 
             (value, options) => value ? "yes" : "no",

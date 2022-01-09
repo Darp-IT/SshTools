@@ -13,14 +13,12 @@ namespace SshTools.Config.Parents
         //                   ParameterParent Keyword Properties
         //-----------------------------------------------------------------------//
         
-        public string User { get => this.Get(Keyword.User); set => this.Set(Keyword.User, value); }
-        public string IdentityFile { get => this.Get(Keyword.IdentityFile); set => this.Set(Keyword.IdentityFile, value); }
-        public ushort Port { get => this.Get(Keyword.Port); set => this.Set(Keyword.Port, value); }
         public string HostName { get => this.Get(Keyword.HostName); set => this.Set(Keyword.HostName, value); }
         public bool IdentitiesOnly { get => this.Get(Keyword.IdentitiesOnly); set => this.Set(Keyword.IdentitiesOnly, value); }
+        public string IdentityFile { get => this.Get(Keyword.IdentityFile); set => this.Set(Keyword.IdentityFile, value); }
+        public ushort Port { get => this.Get(Keyword.Port); set => this.Set(Keyword.Port, value); }
+        public string User { get => this.Get(Keyword.User); set => this.Set(Keyword.User, value); }
 
-        
-        
         //-----------------------------------------------------------------------//
         //                          ParameterParent Logic
         //-----------------------------------------------------------------------//

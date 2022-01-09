@@ -28,6 +28,14 @@ namespace SshTools.Tests.Unit
             "  User user1\n" + 
             "Host host2\n" + 
             "  Port 12345   ";
+        public const string ConfigWithEveryParameter = 
+            "HostName host1\n" +
+            "IdentitiesOnly yes\n" +
+            "IdentityFile ~/.ssh/id_rsa\n" +
+            "User user1\n" +
+            "Port 12345\n" +
+            "Host host2\n" +
+            "Match all";
         
         public static SshConfig DeserializeString(string configString)
         {

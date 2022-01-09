@@ -1,132 +1,73 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FluentResults;
+using SshTools.Config.Exceptions;
 using SshTools.Config.Extensions;
 using SshTools.Config.Matching;
 using SshTools.Config.Parameters;
+using SshTools.Config.Parser;
 
 namespace SshTools.Config.Parents
 {
     public static class ParentExtensions
     {
-        public static bool Has(this SshConfig sshConfig, string hostName, MatchingOptions options = MatchingOptions.EXACT) =>
-            sshConfig.Matching(hostName, options).WhereArg<Node>().Any();
-
-        public static int IndexOf(this SshConfig sshConfig, string hostName)
-        {
-            for (var i = 0; i < sshConfig.Count; i++)
-            {
-                if (!(sshConfig[i] is IParameter param)) continue;
-                if (param.Argument is Node node && node.MatchString.Equals(hostName))
-                    return i;
-            }
-            return -1;
-        }
-        
-        public static HostNode Get(this SshConfig sshConfig, string hostName) => sshConfig
-            .Matching(hostName, MatchingOptions.EXACT)
-            .WhereArg<HostNode>()
-            .SelectArg()
-            .FirstOrDefault();
-
         /// <summary>
-        /// Returns a list of all matching nodes including the <paramref name="config"/> at index [0]
+        /// Deserializes a string into a sequence of lines
         /// </summary>
-        /// <param name="config">The config to be searched</param>
-        /// <param name="name">The name to be searched by</param>
-        /// <param name="options">Searching options</param>
-        /// <returns>A list of matching nodes</returns>
-        public static IList<Node> GetAll(
-            this SshConfig config,
-            string name,
-            MatchingOptions options = MatchingOptions.MATCHING)
+        /// <param name="configString">The given string, that represents a ssh config</param>
+        /// <returns>A sequence of lines representing <paramref name="configString"/></returns>
+        /// <exception cref="ResultException">Thrown if something goes wrong while parsing</exception>
+        /// <exception cref="Exception">Thrown if something goes wrong while parsing</exception>
+        internal static IEnumerable<ILine> Deserialized(this string configString)
         {
-            var list = new List<Node> { config.FirstToHost("") };
-            foreach (var parameter in config.Matching(name, options))
+            foreach (var l in configString.Split('\n'))
             {
-                if (parameter.Argument is Node parent)
-                    list.Add(parent);
-            }
-            return list;
-        }
-        
-        /// <summary>
-        /// Gets a list of all nodes including the <paramref name="config"/> at index [0]
-        /// </summary>
-        /// <param name="config">The config to be searched</param>
-        /// <returns>List of nodes</returns>
-        public static IList<Node> GetAll(this SshConfig config)
-        {
-            var list = new List<Node> {config.FirstToHost("")};
-            list.AddRange(config.Nodes());
-            return list;
-        }
-        
-        /// <summary>
-        /// Compiles all matching parameters of a config into a unique host.
-        /// The host will be completely uncoupled from the config.
-        /// </summary>
-        /// <param name="sshConfig">The <see cref="SshConfig"/> to be searched</param>
-        /// <param name="hostName">The HostName to be searched for</param>
-        /// <param name="options">Matching options for the <see cref="hostName"/></param>
-        /// <returns>The new Host</returns>
-        public static HostNode Find(this SshConfig sshConfig,
-            string hostName,
-            MatchingOptions options = MatchingOptions.MATCHING) =>
-            sshConfig
-                .Compiled()
-                .Matching(hostName, options)
-                .WhereArg<Node>()
-                .SelectArg()
-                .ToHost(hostName);
-
-        public static Result<T> Insert<T>(this SshConfig sshConfig, int index, Keyword<T> keyword, string name)
-            where T : Node
-        {
-            var desRes = keyword.DeserializeArgument(name);
-            return desRes.IsSuccess
-                ? sshConfig.Insert(index, keyword, desRes.Value)
-                : desRes.ToResult();
-        }
-        
-        public static Result<T> Set<T>(this SshConfig sshConfig, Keyword<T> keyword, string name)
-            where T : Node
-        {
-            var desRes = keyword.DeserializeArgument(name);
-            return desRes.IsSuccess
-                ? sshConfig.Set(keyword, desRes.Value)
-                : desRes;
-        }
-
-        public static void Remove(this SshConfig config, Func<ILine, bool> func, int maxCount = int.MaxValue)
-        {
-            config.ThrowIfNull();
-            func.ThrowIfNull();
-            var i = 0;
-            var count = 0;
-            while (i < config.Count && count < maxCount)
-            {
-                if (func(config[i]))
+                var line = l.Replace("\r", "");
+                // Go for all comments (empty lines and comments, that are being stripped of their first #)
+                if (LineParser.IsConfigComment(line))
                 {
-                    config.RemoveAt(i);
-                    count++;
+                    var comment = LineParser.TrimFront(line, out var spacingComment);
+
+                    yield return new Comment(
+                        comment.StartsWith("#")
+                            ? comment.Substring(1, comment.Length - 1)
+                            : comment,
+                        spacingComment);
+                    continue;
                 }
-                else
-                {
-                    i++;
-                }
+
+                line = LineParser.TrimFront(line, out var spacingFront);
+
+                line = LineParser.TrimKey(line, out var keyRes);
+                if (keyRes.IsFailed)
+                    throw new ResultException(keyRes.WithError($"While parsing line '{l}'"));
+
+                var keyString = keyRes.Value;
+                if (!SshTools.Settings.HasKeyword(keyString))
+                    throw new Exception($"Unknown Keyword {keyRes.Value} while parsing line '{l}'");
+
+                var key = SshTools.Settings.GetKeyword(keyString);
+
+                line = LineParser.TrimSeparator(line, out var separatorRes);
+                if (separatorRes.IsFailed)
+                    throw new ResultException(separatorRes.WithError($"While parsing line '{l}'"));
+
+                var spacingBack = LineParser.TrimArgument(line, out var argumentRes, out var quoted);
+
+                var appearance = new ParameterAppearance(
+                    spacingFront,
+                    keyString,
+                    separatorRes.Value,
+                    quoted,
+                    spacingBack
+                );
+                var paramRes = key.GetParameter(argumentRes, appearance);
+                if (paramRes.IsFailed)
+                    throw new ResultException(paramRes.WithError($"While parsing line '{l}'"));
+                yield return paramRes.Value;
             }
         }
-
-        public static void Remove<T>(this SshConfig config, Func<IArgParameter<T>, bool> func, int maxCount = int.MaxValue) =>
-            config.Remove(p => p is IArgParameter<T> param && func(param), maxCount);
-
-        public static void Remove(this SshConfig config, string name,
-            int maxCount = int.MaxValue,
-            MatchingOptions options = MatchingOptions.EXACT) =>
-            config.Remove<Node>(p => p.Argument.Matches(name, new MatchingContext(name), options), maxCount);
-
+        
         /// <summary>
         /// Creates a new SshConfig, with all includes
         /// </summary>
@@ -153,15 +94,23 @@ namespace SshTools.Config.Parents
         public static TP PushHost<TP>(this TP parent, string hostName, Action<HostNode> func = null)
             where TP : SshConfig
         {
-            var res = parent.Insert(0, Keyword.Host, hostName);
+            var res = parent.InsertHost(0, hostName);
             if (res.IsSuccess) func?.Invoke(res.Value);
             return parent;
         }
         
-        public static TP PushMatch<TP>(this TP parent, Action<MatchNode> func = null)
+        public static TP PushMatch<TP>(this TP parent, Criteria criteria, Action<MatchNode> func = null)
             where TP : SshConfig
         {
-            var res = parent.Insert(0, Keyword.Match, "");
+            var res = parent.InsertMatch(0, criteria);
+            if (res.IsSuccess) func?.Invoke(res.Value);
+            return parent;
+        }
+        
+        public static TP PushMatch<TP>(this TP parent, ArgumentCriteria criteria, string argument, Action<MatchNode> func = null)
+            where TP : SshConfig
+        {
+            var res = parent.InsertMatch(0, criteria, argument);
             if (res.IsSuccess) func?.Invoke(res.Value);
             return parent;
         }
