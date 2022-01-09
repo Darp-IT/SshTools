@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentResults;
+using SshTools.Config.Exceptions;
 using SshTools.Config.Extensions;
 using SshTools.Config.Matching;
 using SshTools.Config.Parameters;
+using SshTools.Config.Parser;
 using SshTools.Config.Util;
 
 namespace SshTools.Config.Parents
@@ -19,31 +21,31 @@ namespace SshTools.Config.Parents
         /// <summary>
         /// Checks if given sequence contains an entry with the given keyword
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to check on</param>
+        /// <param name="lines">A sequence of lines to check on</param>
         /// <param name="keyword">The <see cref="Keyword"/> to be searched for</param>
         /// <returns>Whether the sequence contains an entry with this keyword</returns>
-        public static bool Has(this IEnumerable<ILine> parameters, Keyword keyword) => 
-            parameters.Any(p => p.Is(keyword));
+        public static bool Has(this IEnumerable<ILine> lines, Keyword keyword) => 
+            lines.Any(p => p.Is(keyword));
         
         /// <summary>
-        /// Returns the argument of the first matching element of the given <paramref name="parameters"/>
+        /// Returns the argument of the first matching element of the given <paramref name="lines"/>
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to get from</param>
+        /// <param name="lines">A sequence of lines to get from</param>
         /// <param name="keyword">The <see cref="Keyword{T}"/> to be searched for</param>
         /// <typeparam name="TParam">Argument type</typeparam>
         /// <returns>First matching Argument as <typeparamref name="TParam"/> or default</returns>
-        public static TParam Get<TParam>(this IEnumerable<ILine> parameters, Keyword<TParam> keyword) => 
-            (TParam) parameters.Get((Keyword) keyword);
+        public static TParam Get<TParam>(this IEnumerable<ILine> lines, Keyword<TParam> keyword) => 
+            (TParam) lines.Get((Keyword) keyword);
 
         /// <summary>
         /// Non generic way to get the argument by key as an object from the given sequence.
         /// Use only when necessary
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to get from</param>
+        /// <param name="lines">A sequence of lines to get from</param>
         /// <param name="keyword">The <see cref="Keyword"/> to be searched for</param>
         /// <returns>First argument as <see cref="object"/> or default</returns>
-        internal static object Get(this IEnumerable<ILine> parameters, Keyword keyword) =>
-            parameters
+        internal static object Get(this IEnumerable<ILine> lines, Keyword keyword) =>
+            lines
                 .OfParameter()
                 .Where(p => p.Is(keyword))
                 .Select(p => p.Argument)
@@ -53,7 +55,7 @@ namespace SshTools.Config.Parents
         /// Returns the index of the given <paramref name="keyword"/>
         /// If the given sequence does not contain it the return will be -1
         /// </summary>
-        /// <param name="lines">A sequence of parameters to be searched</param>
+        /// <param name="lines">A sequence of lines to be searched</param>
         /// <param name="keyword">The <see cref="Keyword"/> to be searched for</param>
         /// <returns>Index of the element, -1 if not available</returns>
         public static int IndexOf(this IList<ILine> lines, Keyword keyword)
@@ -69,30 +71,31 @@ namespace SshTools.Config.Parents
         }
         
         /// <summary>
-        /// Inserts a given value <typeparamref name="TValue"/> into the sequence of parameters at <paramref name="index"/>. 
-        /// Dependent on <paramref name="ignoreCount"/> the method will check for an already existing one
+        /// Inserts a given value <typeparamref name="TValue"/> into the sequence of lines at <paramref name="index"/>. 
+        /// Dependent on <paramref name="ignoreCount"/> the method will check for an already existing one.<br/>
+        /// If the <paramref name="index"/> is negative the insertion will be counted from the back
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to be inserted to</param>
-        /// <param name="index">The index to be inserted at</param>
+        /// <param name="lines">A sequence of lines to be inserted to</param>
+        /// <param name="index">The index to be inserted at in range [ -Count; Count-1 ]</param>
         /// <param name="keyword">The keyword to insert</param>
         /// <param name="value">The value to be inserted</param>
         /// <param name="ignoreCount">Whether the insertion will be executed if a keyword, that is only allowed once,
         /// is already present</param>
         /// <typeparam name="TValue">The type of <paramref name="value"/></typeparam>
         /// <returns><see cref="Result{TValue}"/> with optionally value or reason for failure</returns>
-        public static Result<TValue> Insert<TValue>(this IList<ILine> parameters,
+        public static Result<TValue> Insert<TValue>(this IList<ILine> lines,
             int index, Keyword<TValue> keyword, TValue value, bool ignoreCount = false)
         {
-            parameters.ThrowIfNull();
+            lines.ThrowIfNull();
             keyword.ThrowIfNull();
             value.ThrowIfNull();
-            if (index < -parameters.Count-1 || index > parameters.Count) Result.Fail(
-                $"Index is out of bounds! May be in range of {-parameters.Count-1};{parameters.Count} but is {index}");
-            if (!ignoreCount && !keyword.AllowMultiple && parameters.Has(keyword))
+            if (index < -lines.Count-1 || index > lines.Count) Result.Fail(
+                $"Index is out of bounds! May be in range of {-lines.Count-1};{lines.Count} but is {index}");
+            if (!ignoreCount && !keyword.AllowMultiple && lines.Has(keyword))
                 return Result.Fail<TValue>($"Already containing entry with keyword {keyword}");
             var insertionRes = Result.Try(() => 
-                parameters.Insert(
-                    index >= 0 ? index : parameters.Count + index + 1, 
+                lines.Insert(
+                    index >= 0 ? index : lines.Count + index + 1, 
                     new Parameter<TValue>(keyword, value, ParameterAppearance.Default(keyword))));
             return insertionRes.IsSuccess
                 ? Result.Ok(value)
@@ -100,9 +103,9 @@ namespace SshTools.Config.Parents
         }
         
         /// <summary>
-        /// Sets the given <paramref name="value"/> to the sequence of parameters
+        /// Sets the given <paramref name="value"/> to the sequence of <paramref name="lines"/>
         /// </summary>
-        /// <param name="lines">A sequence of parameters to set to</param>
+        /// <param name="lines">A sequence of lines to set to</param>
         /// <param name="keyword">The <see cref="Keyword{T}"/> to be set</param>
         /// <param name="value">The value to be set</param>
         /// <typeparam name="TParam">Type of the value</typeparam>
@@ -122,16 +125,16 @@ namespace SshTools.Config.Parents
         /// <summary>
         /// Removes the first matching entry in the given sequence
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to be removed from</param>
+        /// <param name="lines">A sequence of lines to be removed from</param>
         /// <param name="keyword">The <see cref="Keyword"/> to be removed</param>
         /// <returns><see cref="Result{TValue}"/> with optional reason for failure</returns>
-        public static Result Remove(this IList<ILine> parameters, Keyword keyword)
+        public static Result Remove(this IList<ILine> lines, Keyword keyword)
         {
-            parameters.ThrowIfNull();
+            lines.ThrowIfNull();
             keyword.ThrowIfNull();
-            var index = parameters.IndexOf(keyword);
+            var index = lines.IndexOf(keyword);
             if (index < 0) return Result.Fail("Keyword not available");
-            parameters.RemoveAt(index);
+            lines.RemoveAt(index);
             return Result.Ok();
         }
 
@@ -153,7 +156,7 @@ namespace SshTools.Config.Parents
         /// Returns the index of the given <paramref name="hostName"/>
         /// If the given sequence does not contain it the return will be -1
         /// </summary>
-        /// <param name="lines">A sequence of parameters to be searched</param>
+        /// <param name="lines">A sequence of lines to be searched</param>
         /// <param name="hostName">The name of the host to be searched for</param>
         /// <returns>Index of the element, -1 if not available</returns>
         public static int IndexOf(this IList<ILine> lines, string hostName)
@@ -195,7 +198,7 @@ namespace SshTools.Config.Parents
         /// Inserts a new <see cref="HostNode"/> of given <paramref name="hostName"/> at <paramref name="index"/>
         /// </summary>
         /// <param name="lines">The list of lines to be set to</param>
-        /// <param name="index">The index to be inserted at</param>
+        /// <param name="index">The index to be inserted at in range [ -Count; Count-1 ]</param>
         /// <param name="hostName">The name of the new Host</param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Host</returns>
         public static Result<HostNode> InsertHost(this IList<ILine> lines, int index, string hostName) =>
@@ -205,7 +208,7 @@ namespace SshTools.Config.Parents
         /// Inserts a new <see cref="MatchNode"/> at <paramref name="index"/> with a new <see cref="Criteria"/>
         /// </summary>
         /// <param name="lines">The list of lines to be inserted at</param>
-        /// <param name="index">The index to be inserted at</param>
+        /// <param name="index">The index to be inserted at in range [ -Count; Count-1 ]</param>
         /// <param name="criteria">The criteria of the match</param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Match</returns>
         public static Result<MatchNode> InsertMatch(this IList<ILine> lines, int index, Criteria criteria)
@@ -219,7 +222,7 @@ namespace SshTools.Config.Parents
         /// Inserts a new <see cref="MatchNode"/> at <paramref name="index"/> with a new <see cref="Criteria"/>
         /// </summary>
         /// <param name="lines">The list of lines to be inserted at</param>
-        /// <param name="index">The index to be inserted at</param>
+        /// <param name="index">The index to be inserted at in range [ -Count; Count-1 ]</param>
         /// <param name="criteria">The criteria of the match</param>
         /// <param name="argument">The argument of the <paramref name="criteria"/></param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Match</returns>
@@ -307,7 +310,8 @@ namespace SshTools.Config.Parents
         /// <param name="lines">The sequence of lines to be removed from</param>
         /// <param name="func">The predicate to be matched</param>
         /// <param name="maxCount">The maximum of lines to be removed</param>
-        public static void Remove(this IList<ILine> lines, Func<ILine, bool> func, int maxCount = int.MaxValue)
+        /// <returns>The number of removed lines</returns>
+        public static int Remove(this IList<ILine> lines, Func<ILine, bool> func, int maxCount = int.MaxValue)
         {
             lines.ThrowIfNull();
             func.ThrowIfNull();
@@ -325,16 +329,18 @@ namespace SshTools.Config.Parents
                     i++;
                 }
             }
+            return count;
         }
 
         /// <summary>
-        /// Removes <paramref name="maxCount"/> of parameters that extend <typeparamref name="T"/> and fulfill the given <paramref name="func"/>
+        /// Removes <paramref name="maxCount"/> of <paramref name="lines"/> that extend <typeparamref name="T"/> and fulfill the given <paramref name="func"/>
         /// </summary>
         /// <param name="lines">The sequence of lines to be removed from</param>
         /// <param name="func">The predicate to be matched</param>
         /// <param name="maxCount">The maximum of lines to be removed</param>
         /// <typeparam name="T">The type that the parameter's arguments should extend from</typeparam>
-        public static void Remove<T>(this IList<ILine> lines, Func<IArgParameter<T>, bool> func, int maxCount = int.MaxValue) =>
+        /// <returns>The number of removed lines</returns>
+        public static int Remove<T>(this IList<ILine> lines, Func<IArgParameter<T>, bool> func, int maxCount = int.MaxValue) =>
             lines.Remove(line => line is IArgParameter<T> param && func(param), maxCount);
 
         /// <summary>
@@ -344,21 +350,50 @@ namespace SshTools.Config.Parents
         /// <param name="name">The name of the node to be matched against</param>
         /// <param name="maxCount">The maximum of lines to be removed</param>
         /// <param name="options">Options, that specify the comparison</param>
-        public static void Remove(this IList<ILine> lines, string name,
+        /// <returns>The number of removed lines</returns>
+        public static int Remove(this IList<ILine> lines, string name,
             int maxCount = int.MaxValue,
             MatchingOptions options = MatchingOptions.EXACT) =>
             lines.Remove<Node>(param => param.Argument.Matches(name, new MatchingContext(name), options), maxCount);
 
+        /// <summary>
+        /// Selects all lines of type <see cref="HostNode"/>
+        /// </summary>
+        /// <param name="lines">The sequence of lines to be selected from</param>
+        /// <returns>A sequence of type <see cref="HostNode"/></returns>
+        public static IEnumerable<HostNode> Hosts(this IEnumerable<ILine> lines) => lines
+            .WhereArg<HostNode>()
+            .SelectArg();
+        
+        /// <summary>
+        /// Selects all lines of type <see cref="MatchNode"/>
+        /// </summary>
+        /// <param name="lines">The sequence of lines to be selected from</param>
+        /// <returns>A sequence of type <see cref="MatchNode"/></returns>
+        public static IEnumerable<MatchNode> Matches(this IEnumerable<ILine> lines) => lines
+            .WhereArg<MatchNode>()
+            .SelectArg();
+        
+        /// <summary>
+        /// Selects all lines of type <see cref="Node"/>
+        /// </summary>
+        /// <param name="lines">The sequence of lines to be selected from</param>
+        /// <returns>A sequence of type <see cref="Node"/></returns>
+        public static IEnumerable<Node> Nodes(this IEnumerable<ILine> lines) => lines
+            .WhereArg<Node>()
+            .SelectArg();
+
+        
         //-----------------------------------------------------------------------//
         //                    Advanced Functions for Parameters
         //-----------------------------------------------------------------------//
         
         /// <summary>
         /// Flattens the given sequence <paramref name="lines"/>.
-        /// Generates a list of all parameters, contained in <paramref name="lines"/>;
+        /// Generates a list of all <paramref name="lines"/>, contained in <paramref name="lines"/>;
         /// Creates new and empty nodes and automatically resolves includes
         /// </summary>
-        /// <param name="lines">A sequence of parameters to flatten</param>
+        /// <param name="lines">A sequence of lines to flatten</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are the result of the flattening</returns>
         public static IEnumerable<ILine> Flatten(this IEnumerable<ILine> lines)
         {
@@ -401,9 +436,9 @@ namespace SshTools.Config.Parents
         }
 
         /// <summary>
-        /// Collects all parameters and groups them in hosts
+        /// Collects all <paramref name="lines"/> and groups them in hosts
         /// </summary>
-        /// <param name="lines">A sequence of parameters to be collected from</param>
+        /// <param name="lines">A sequence of lines to be collected from</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are the result of collecting</returns>
         public static IEnumerable<ILine> Collect(this IEnumerable<ILine> lines)
         {
@@ -412,26 +447,30 @@ namespace SshTools.Config.Parents
             IList<Comment> comments = new List<Comment>();
             foreach (var line in lines)
             {
-                if (line is Comment comment)
+                switch (line)
                 {
-                    comments.Add(comment);
-                }
-                else if (line is IParameter param)
-                {
-                    param.Comments.AddRange(comments);
-                    comments.Clear();
-                    if (line.IsNode() && line is IArgParameter<ParameterParent> parent)
+                    case Comment comment:
+                        comments.Add(comment);
+                        break;
+                    case IParameter param:
                     {
-                        if (lastNode != null)
-                            yield return lastNode;
-                        lastNode = parent;
-                    }
-                    else
-                    {
-                        if (lastNode != null) 
-                            lastNode.Argument.Add(line);
+                        param.Comments.AddRange(comments);
+                        comments.Clear();
+                        if (line.IsNode() && line is IArgParameter<ParameterParent> parent)
+                        {
+                            if (lastNode != null)
+                                yield return lastNode;
+                            lastNode = parent;
+                        }
                         else
-                            yield return line;
+                        {
+                            if (lastNode != null) 
+                                lastNode.Argument.Add(line);
+                            else
+                                yield return line;
+                        }
+
+                        break;
                     }
                 }
             }
@@ -444,16 +483,16 @@ namespace SshTools.Config.Parents
         }
 
         /// <summary>
-        /// Clones all parameters of given <paramref name="parameters"/> <br/>
+        /// Clones all <paramref name="lines"/> of given <paramref name="lines"/> <br/>
         /// Cloned configs will loose all information about comments on the tail of the config
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to invoke the clone on.</param>
-        /// <typeparam name="TParam">The type of the parameters of <paramref name="parameters" /></typeparam>
+        /// <param name="lines">A sequence of lines to invoke the clone on.</param>
+        /// <typeparam name="TLine">The type of the given <paramref name="lines" /></typeparam>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are the result of invoking the clone function
-        /// on each parameter of <paramref name="parameters" /></returns>
-        public static IEnumerable<TParam> Cloned<TParam>(this IEnumerable<TParam> parameters)
-            where TParam : ILine =>
-            parameters.Select(parameter => (TParam) parameter.Clone());
+        /// on each parameter of <paramref name="lines" /></returns>
+        public static IEnumerable<TLine> Cloned<TLine>(this IEnumerable<TLine> lines)
+            where TLine : ILine =>
+            lines.Select(parameter => (TLine) parameter.Clone());
 
         /// <summary>
         /// Compiles the given sequence by applying
@@ -463,18 +502,18 @@ namespace SshTools.Config.Parents
         ///<item><see cref="Cloned{TParam}"/></item>
         /// </list>
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to be compiled</param>
+        /// <param name="lines">A sequence of ILine to be compiled</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are the result of the compilation</returns>
-        public static IEnumerable<ILine> Compiled(this IEnumerable<ILine> parameters) =>
-            parameters.Flatten()
+        public static IEnumerable<ILine> Compiled(this IEnumerable<ILine> lines) =>
+            lines.Flatten()
                 .Collect()
                 .Cloned();
         
         /// <summary>
         /// Scans every parameter in the given sequence and only returns matching ones
-        /// Normal parameters are collected and all <see cref="Node"/>s, that apply to <see cref="Node.Matches"/>
+        /// Normal <paramref name="lines"/> are collected and all <see cref="Node"/>s, that apply to <see cref="Node.Matches"/>
         /// </summary>
-        /// <param name="lines">A sequence of parameters to be matched</param>
+        /// <param name="lines">A sequence of ILine to be matched</param>
         /// <param name="name">The name to be matched against</param>
         /// <param name="options">The options for the matching</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are matching the <paramref name="name"/></returns>
@@ -506,17 +545,17 @@ namespace SshTools.Config.Parents
         /// <summary>
         /// Filters the given sequence, where the parameter type is exactly of <typeparamref name="TParam"/>
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to be filtered</param>
+        /// <param name="lines">A sequence of lines to be filtered</param>
         /// <param name="keyword">The <see cref="Keyword{TParam}"/> to be searched for</param>
         /// <typeparam name="TParam">The type to be filtered for</typeparam>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are of type <typeparamref name="TParam"/></returns>
         public static IEnumerable<IParameter<TParam>> WhereParam<TParam>(
-            this IEnumerable<ILine> parameters,
+            this IEnumerable<ILine> lines,
             Keyword<TParam> keyword)
         {
-            parameters.ThrowIfNull();
+            lines.ThrowIfNull();
             keyword.ThrowIfNull();
-            foreach (var item in parameters)
+            foreach (var item in lines)
                     if (item is IParameter<TParam> param && param.Keyword == keyword)
                         yield return param;
             
@@ -525,24 +564,24 @@ namespace SshTools.Config.Parents
         /// <summary>
         /// Filters the given sequence, where the argument's type is extending from <typeparamref name="TParam"/>
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to be filtered</param>
+        /// <param name="lines">A sequence of lines to be filtered</param>
         /// <typeparam name="TParam">The type the arguments should extend from</typeparam>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are of type <typeparamref name="TParam"/></returns>
-        public static IEnumerable<IArgParameter<TParam>> WhereArg<TParam>(this IEnumerable<ILine> parameters)
+        public static IEnumerable<IArgParameter<TParam>> WhereArg<TParam>(this IEnumerable<ILine> lines)
         {
-            parameters.ThrowIfNull();
-            foreach (var item in parameters)
+            lines.ThrowIfNull();
+            foreach (var item in lines)
                 if (item is IArgParameter<TParam> param)
                     yield return param;
         }
         
         /// <summary>
-        /// 
+        /// Selects the arguments of all lines, that are of type <see cref="IParameter"/>
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to be selected</param>
+        /// <param name="lines">A sequence of lines to be selected</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are the selected arguments</returns>
-        public static IEnumerable<object> SelectArg(this IEnumerable<IParameter> parameters) => 
-            parameters.Select(p => p.Argument);
+        public static IEnumerable<object> SelectArg(this IEnumerable<ILine> lines) => 
+            lines.OfParameter().Select(p => p.Argument);
 
         public static IEnumerable<IParameter> OfParameter(this IEnumerable<ILine> lines) => 
             lines.OfType<IParameter>();
@@ -550,35 +589,35 @@ namespace SshTools.Config.Parents
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to be selected</param>
+        /// <param name="lines">A sequence of lines to be selected</param>
         /// <typeparam name="TParam">The type of arguments to be selected</typeparam>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are the selected arguments
         /// of type <typeparamref name="TParam"/></returns>
-        public static IEnumerable<TParam> SelectArg<TParam>(this IEnumerable<IArgParameter<TParam>> parameters) =>
-            parameters.Select(p => p.Argument);
+        public static IEnumerable<TParam> SelectArg<TParam>(this IEnumerable<IArgParameter<TParam>> lines) =>
+            lines.Select(p => p.Argument);
 
         //-----------------------------------------------------------------------//
         //                           Consumer functions
         //-----------------------------------------------------------------------//
 
         /// <summary>
-        /// Consumes given enumerable of parameters and returns a new <see cref="SshConfig"/>
+        /// Consumes given enumerable of <paramref name="lines"/> and returns a new <see cref="SshConfig"/>
         /// </summary>
-        /// <param name="parameters">A sequence of parameters to create the config of</param>
+        /// <param name="lines">A sequence of lines to create the config of</param>
         /// <param name="fileName">Optional file name, as initializer for the SshConfig</param>
         /// <returns>SshConfig</returns>
-        public static SshConfig ToConfig(this IEnumerable<ILine> parameters, string fileName = null)
+        public static SshConfig ToConfig(this IEnumerable<ILine> lines, string fileName = null)
         {
-            parameters.ThrowIfNull();
-            return new SshConfig(fileName, parameters.Collect().ToList());
+            lines.ThrowIfNull();
+            return new SshConfig(fileName, lines.Collect().ToList());
         }
 
         /// <summary>
-        /// Consumes given enumerable and returns first free parameters as a new <see cref="HostNode"/>.
+        /// Consumes given enumerable and returns first free <paramref name="lines"/> as a new <see cref="HostNode"/>.
         /// If a parameter is defined multiple times (except from those intended) only the first will be there.
         /// Comments of all parents will be added if they contain anything
         /// </summary>
-        /// <param name="lines">A sequence of parameters to create the host of</param>
+        /// <param name="lines">A sequence of lines to create the host of</param>
         /// <param name="hostName">HostName of the Host, used as initializer</param>
         /// <returns>HostNode</returns>
         public static HostNode FirstToHost(this IEnumerable<ILine> lines, string hostName)
@@ -604,40 +643,7 @@ namespace SshTools.Config.Parents
         }
         
         /// <summary>
-        /// Consumes the given sequence of parameters and serializes them into a string.
-        /// By changing the options one can specify the look
-        /// </summary>
-        /// <param name="parameters">A sequence of parameters to be serialized</param>
-        /// <param name="options">The options for exporting</param>
-        /// <returns>Serialized string</returns>
-        public static string Serialize(
-            this IEnumerable<ILine> parameters,
-            SerializeConfigOptions options = SerializeConfigOptions.DEFAULT)
-        {
-            parameters.ThrowIfNull();
-            if (parameters is IConfigSerializable serializable)
-                return serializable.Serialize(options);
-            var lines = new List<string>();
-            lines.AddRange(parameters.Select(p => p.Serialize(options)));
-            return string.Join(Environment.NewLine, lines);
-        }
-        
-        /// <summary>
-        /// Writes a file to the path specified with <paramref name="filename"/>
-        /// </summary>
-        /// <param name="parameters">A sequence of parameters to be written</param>
-        /// <param name="filename">The path to the file</param>
-        /// <returns>Result if export was successful</returns>
-        public static Result WriteFile(this IEnumerable<ILine> parameters, string filename)
-        {
-            parameters.ThrowIfNull();
-            filename.ThrowIfNull();
-            return Result.Try(() => 
-                File.WriteAllText(filename, parameters.Serialize()));
-        }
-        
-        /// <summary>
-        /// Compiles all matching parameters of a config into a new host.
+        /// Compiles all matching <paramref name="lines"/> of a config into a new host.
         /// The host will be completely uncoupled from the config.
         /// </summary>
         /// <param name="lines">A sequence of lines to be searched</param>
@@ -653,6 +659,123 @@ namespace SshTools.Config.Parents
                 .WhereArg<Node>()
                 .SelectArg()
                 .ToHost(hostName);
+        
+        /// <summary>
+        /// Creates a new SshConfig, with all includes
+        /// </summary>
+        /// <param name="lines">The sequence of lines to be compiled</param>
+        /// <returns>New SshConfig</returns>
+        public static SshConfig Compile(this IEnumerable<ILine> lines) =>
+            lines.Compiled().ToConfig();
 
+        /// <summary>
+        /// Queries the given sequence of lines to select those of type <see cref="Node"/> and bakes them into a new list
+        /// </summary>
+        /// <param name="lines">The sequence to be selected</param>
+        /// <returns>A list of type <see cref="Node"/></returns>
+        public static IList<Node> GetNodes(this IEnumerable<ILine> lines) => lines.Nodes().ToList();
+        
+        /// <summary>
+        /// Queries the given sequence of lines to select those of type <see cref="Node"/> and bakes them into a new list
+        /// </summary>
+        /// <param name="lines">The sequence to be selected</param>
+        /// <returns>A list of type <see cref="HostNode"/></returns>
+        public static IList<HostNode> GetHosts(this IEnumerable<ILine> lines) => lines.Hosts().ToList();
+        
+        /// <summary>
+        /// Queries the given sequence of lines to select those of type <see cref="MatchNode"/> and bakes them into a new list
+        /// </summary>
+        /// <param name="lines">The sequence to be selected</param>
+        /// <returns>A list of type <see cref="MatchNode"/></returns>
+        public static IList<MatchNode> GetMatches(this IEnumerable<ILine> lines) => lines.Matches().ToList();
+        
+        /// <summary>
+        /// Consumes the given sequence of lines and serializes them into a string.
+        /// By changing the options one can specify the look
+        /// </summary>
+        /// <param name="lines">A sequence of lines to be serialized</param>
+        /// <param name="options">The options for exporting</param>
+        /// <returns>Serialized string</returns>
+        public static string Serialize(
+            this IEnumerable<ILine> lines,
+            SerializeConfigOptions options = SerializeConfigOptions.DEFAULT)
+        {
+            lines.ThrowIfNull();
+            if (lines is IConfigSerializable serializable)
+                return serializable.Serialize(options);
+            var serializedList = new List<string>();
+            serializedList.AddRange(lines.Select(p => p.Serialize(options)));
+            return string.Join(Environment.NewLine, serializedList);
+        }
+        
+        /// <summary>
+        /// Writes a file to the path specified with <paramref name="filename"/>
+        /// </summary>
+        /// <param name="lines">A sequence of lines to be written</param>
+        /// <param name="filename">The path to the file</param>
+        /// <returns>Result if export was successful</returns>
+        public static Result WriteFile(this IEnumerable<ILine> lines, string filename)
+        {
+            lines.ThrowIfNull();
+            filename.ThrowIfNull();
+            return Result.Try(() => 
+                File.WriteAllText(filename, lines.Serialize()));
+        }
+        /// <summary>
+        /// Deserializes a string into a sequence of lines
+        /// </summary>
+        /// <param name="configString">The given string, that represents a ssh config</param>
+        /// <returns>A sequence of lines representing <paramref name="configString"/></returns>
+        /// <exception cref="ResultException">Thrown if something goes wrong while parsing</exception>
+        /// <exception cref="Exception">Thrown if something goes wrong while parsing</exception>
+        internal static IEnumerable<ILine> Deserialized(this string configString)
+        {
+            foreach (var l in configString.Split('\n'))
+            {
+                var line = l.Replace("\r", "");
+                // Go for all comments (empty lines and comments, that are being stripped of their first #)
+                if (LineParser.IsConfigComment(line))
+                {
+                    var comment = LineParser.TrimFront(line, out var spacingComment);
+
+                    yield return new Comment(
+                        comment.StartsWith("#")
+                            ? comment.Substring(1, comment.Length - 1)
+                            : comment,
+                        spacingComment);
+                    continue;
+                }
+
+                line = LineParser.TrimFront(line, out var spacingFront);
+
+                line = LineParser.TrimKey(line, out var keyRes);
+                if (keyRes.IsFailed)
+                    throw new ResultException(keyRes.WithError($"While parsing line '{l}'"));
+
+                var keyString = keyRes.Value;
+                if (!SshTools.Settings.HasKeyword(keyString))
+                    throw new Exception($"Unknown Keyword {keyRes.Value} while parsing line '{l}'");
+
+                var key = SshTools.Settings.GetKeyword(keyString);
+
+                line = LineParser.TrimSeparator(line, out var separatorRes);
+                if (separatorRes.IsFailed)
+                    throw new ResultException(separatorRes.WithError($"While parsing line '{l}'"));
+
+                var spacingBack = LineParser.TrimArgument(line, out var argumentRes, out var quoted);
+
+                var appearance = new ParameterAppearance(
+                    spacingFront,
+                    keyString,
+                    separatorRes.Value,
+                    quoted,
+                    spacingBack
+                );
+                var paramRes = key.GetParameter(argumentRes, appearance);
+                if (paramRes.IsFailed)
+                    throw new ResultException(paramRes.WithError($"While parsing line '{l}'"));
+                yield return paramRes.Value;
+            }
+        }
     }
 }

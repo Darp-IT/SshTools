@@ -233,8 +233,8 @@ namespace SshTools.Tests.Integration
 
             //Hosts
             config.Count(p => p.IsHost()).ShouldEqual(4);
-            config.Hosts().Count.ShouldEqual(4);
-            config.Nodes().Count.ShouldEqual(6);
+            config.GetHosts().Count.ShouldEqual(4);
+            config.GetNodes().Count.ShouldEqual(6);
             
             // Matching names
             var matching = config.GetAll("dummy");
@@ -262,10 +262,10 @@ namespace SshTools.Tests.Integration
             config.Has("testhost");
 
             // Match
-            config.Matches().Count.ShouldEqual(0);
+            config.GetMatches().Count.ShouldEqual(0);
             var res2 = config.SetMatch(Criteria.All);
             res2.IsSuccess.ShouldBeTrue();
-            config.Matches().Count.ShouldEqual(1);
+            config.GetMatches().Count.ShouldEqual(1);
         }
 
         [Fact]

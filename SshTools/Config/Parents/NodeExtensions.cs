@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using FluentResults;
 using SshTools.Config.Matching;
-using SshTools.Config.Parameters;
 
 namespace SshTools.Config.Parents
 {
@@ -54,6 +53,29 @@ namespace SshTools.Config.Parents
         [Obsolete(HostWarning, true)]
         public static Result<MatchNode> SetMatch(this Node node, ArgumentCriteria criteria, string argument) =>
             throw new NotImplementedException();
-
+        
+        [Obsolete(HostWarning, true)]
+        public static IEnumerable<Node> Nodes(this Node node) =>
+            throw new NotImplementedException();
+        
+        [Obsolete(HostWarning, true)]
+        public static IEnumerable<HostNode> Hosts(this Node node) =>
+            throw new NotImplementedException();
+        
+        [Obsolete(HostWarning, true)]
+        public static IEnumerable<MatchNode> Matches(this Node node) =>
+            throw new NotImplementedException();
+        
+        [Obsolete(HostWarning, true)]
+        public static IEnumerable<Node> GetNodes(this Node node) =>
+            throw new NotImplementedException();
+        
+        [Obsolete(HostWarning, true)]
+        public static IEnumerable<HostNode> GetHosts(this Node node) =>
+            throw new NotImplementedException();
+        
+        [Obsolete(HostWarning, true)]
+        public static IEnumerable<MatchNode> GetMatches(this Node node) =>
+            throw new NotImplementedException();
     }
 }

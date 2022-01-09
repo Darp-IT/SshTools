@@ -1,118 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using SshTools.Config.Exceptions;
-using SshTools.Config.Extensions;
 using SshTools.Config.Matching;
 using SshTools.Config.Parameters;
-using SshTools.Config.Parser;
 
 namespace SshTools.Config.Parents
 {
-    public static class ParentExtensions
+    public static class SshConfigExtensions
     {
         /// <summary>
-        /// Deserializes a string into a sequence of lines
+        /// Pushes a new <see cref="HostNode"/> to the given <typeparamref name="TLines"/> by inserting at the first place
+        /// If there is an error during insertion it will be silently ignored and the <paramref name="func"/> wont be executed
         /// </summary>
-        /// <param name="configString">The given string, that represents a ssh config</param>
-        /// <returns>A sequence of lines representing <paramref name="configString"/></returns>
-        /// <exception cref="ResultException">Thrown if something goes wrong while parsing</exception>
-        /// <exception cref="Exception">Thrown if something goes wrong while parsing</exception>
-        internal static IEnumerable<ILine> Deserialized(this string configString)
+        /// <param name="lines">The list of lines of type <typeparamref name="TLines"/> to be pushed to</param>
+        /// <param name="hostName">The name of the new host</param>
+        /// <param name="func">An optional function to further edit the newly created host</param>
+        /// <typeparam name="TLines">The type of the list of <paramref name="lines"/></typeparam>
+        /// <returns>The given list of <paramref name="lines"/> with the inserted host at position 0</returns>
+        public static TLines PushHost<TLines>(this TLines lines, string hostName, Action<HostNode> func = null)
+            where TLines : IList<ILine>
         {
-            foreach (var l in configString.Split('\n'))
-            {
-                var line = l.Replace("\r", "");
-                // Go for all comments (empty lines and comments, that are being stripped of their first #)
-                if (LineParser.IsConfigComment(line))
-                {
-                    var comment = LineParser.TrimFront(line, out var spacingComment);
-
-                    yield return new Comment(
-                        comment.StartsWith("#")
-                            ? comment.Substring(1, comment.Length - 1)
-                            : comment,
-                        spacingComment);
-                    continue;
-                }
-
-                line = LineParser.TrimFront(line, out var spacingFront);
-
-                line = LineParser.TrimKey(line, out var keyRes);
-                if (keyRes.IsFailed)
-                    throw new ResultException(keyRes.WithError($"While parsing line '{l}'"));
-
-                var keyString = keyRes.Value;
-                if (!SshTools.Settings.HasKeyword(keyString))
-                    throw new Exception($"Unknown Keyword {keyRes.Value} while parsing line '{l}'");
-
-                var key = SshTools.Settings.GetKeyword(keyString);
-
-                line = LineParser.TrimSeparator(line, out var separatorRes);
-                if (separatorRes.IsFailed)
-                    throw new ResultException(separatorRes.WithError($"While parsing line '{l}'"));
-
-                var spacingBack = LineParser.TrimArgument(line, out var argumentRes, out var quoted);
-
-                var appearance = new ParameterAppearance(
-                    spacingFront,
-                    keyString,
-                    separatorRes.Value,
-                    quoted,
-                    spacingBack
-                );
-                var paramRes = key.GetParameter(argumentRes, appearance);
-                if (paramRes.IsFailed)
-                    throw new ResultException(paramRes.WithError($"While parsing line '{l}'"));
-                yield return paramRes.Value;
-            }
+            var res = lines.InsertHost(0, hostName);
+            if (res.IsSuccess) func?.Invoke(res.Value);
+            return lines;
         }
         
         /// <summary>
-        /// Creates a new SshConfig, with all includes
+        /// Pushes a new <see cref="MatchNode"/> to the given <typeparamref name="TLines"/> by inserting at the first place
+        /// If there is an error during insertion it will be silently ignored and the <paramref name="func"/> wont be executed
         /// </summary>
-        /// <returns>New SshConfig</returns>
-        public static SshConfig Compile(this SshConfig sshConfig) => sshConfig
-            .Compiled()
-            .ToConfig();
-        
-        public static IList<HostNode> Hosts(this SshConfig sshConfig) => sshConfig
-            .WhereArg<HostNode>()
-            .SelectArg()
-            .ToList();
-        
-        public static IList<Node> Nodes(this SshConfig sshConfig) => sshConfig
-            .WhereArg<Node>()
-            .SelectArg()
-            .ToList();
+        /// <param name="lines">The list of lines of type <typeparamref name="TLines"/> to be pushed to</param>
+        /// <param name="criteria">The criteria of the match</param>
+        /// <param name="func">An optional function to further edit the newly created host</param>
+        /// <typeparam name="TLines">The type of the list of <paramref name="lines"/></typeparam>
+        /// <returns>The given list of <paramref name="lines"/> with the inserted match at position 0</returns>
+        public static TLines PushMatch<TLines>(this TLines lines, Criteria criteria, Action<MatchNode> func = null)
+            where TLines : IList<ILine>
+        {
+            var res = lines.InsertMatch(0, criteria);
+            if (res.IsSuccess) func?.Invoke(res.Value);
+            return lines;
+        }
 
-        public static IList<MatchNode> Matches(this SshConfig sshConfig) => sshConfig
-            .WhereArg<MatchNode>()
-            .SelectArg()
-            .ToList();
-        
-        public static TP PushHost<TP>(this TP parent, string hostName, Action<HostNode> func = null)
-            where TP : SshConfig
+        /// <summary>
+        /// Pushes a new <see cref="MatchNode"/> to the given <typeparamref name="TLines"/> by inserting at the first place
+        /// If there is an error during insertion it will be silently ignored and the <paramref name="func"/> wont be executed
+        /// </summary>
+        /// <param name="lines">The list of lines of type <typeparamref name="TLines"/> to be pushed to</param>
+        /// <param name="criteria">The criteria of the match</param>
+        /// <param name="argument">The argument of <paramref name="criteria"/></param>
+        /// <param name="func">An optional function to further edit the newly created host</param>
+        /// <typeparam name="TLines">The type of the list of <paramref name="lines"/></typeparam>
+        /// <returns>The given list of <paramref name="lines"/> with the inserted match at position 0</returns>
+        public static TLines PushMatch<TLines>(this TLines lines, ArgumentCriteria criteria, string argument,
+            Action<MatchNode> func = null)
+            where TLines : IList<ILine>
         {
-            var res = parent.InsertHost(0, hostName);
+            var res = lines.InsertMatch(0, criteria, argument);
             if (res.IsSuccess) func?.Invoke(res.Value);
-            return parent;
-        }
-        
-        public static TP PushMatch<TP>(this TP parent, Criteria criteria, Action<MatchNode> func = null)
-            where TP : SshConfig
-        {
-            var res = parent.InsertMatch(0, criteria);
-            if (res.IsSuccess) func?.Invoke(res.Value);
-            return parent;
-        }
-        
-        public static TP PushMatch<TP>(this TP parent, ArgumentCriteria criteria, string argument, Action<MatchNode> func = null)
-            where TP : SshConfig
-        {
-            var res = parent.InsertMatch(0, criteria, argument);
-            if (res.IsSuccess) func?.Invoke(res.Value);
-            return parent;
+            return lines;
         }
     }
 }
