@@ -5,7 +5,7 @@ namespace SshTools.Config.Matching
     public enum MatchingOptions
     {
         /// <summary>
-        /// Search will return only parameters with exactly matching <see cref="Node.MatchString"/>
+        /// Search will return only parameters with exactly matching <see cref="Node.Name"/>
         /// </summary>
         EXACT,
         

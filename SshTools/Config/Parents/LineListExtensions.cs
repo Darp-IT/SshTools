@@ -157,20 +157,31 @@ namespace SshTools.Config.Parents
         /// <returns>Number of removed lines with matching keyword</returns>
         public static int Remove(this IList<ILine> lines, Keyword keyword, int maxCount = 1) =>
             lines.Remove(l => l.Is(keyword), maxCount);
-
+        
+        /// <summary>
+        /// Removes <paramref name="maxCount"/> of <paramref name="lines"/> that extend <typeparamref name="T"/> and fulfill the given <paramref name="func"/>
+        /// </summary>
+        /// <param name="lines">The sequence of lines to be removed from</param>
+        /// <param name="func">The predicate to be matched</param>
+        /// <param name="maxCount">The maximum of lines to be removed</param>
+        /// <typeparam name="T">The type that the parameter's arguments should extend from</typeparam>
+        /// <returns>The number of removed lines</returns>
+        public static int Remove<T>(this IList<ILine> lines, Func<T, bool> func, int maxCount = int.MaxValue) =>
+            lines.Remove(line => line is IArgParameter<T> param && func(param.Argument), maxCount);
+        
         //-----------------------------------------------------------------------//
         //                      Basic Functions for ParameterParents
         //-----------------------------------------------------------------------//
         
         /// <summary>
-        /// Checks whether a host of <paramref name="hostName"/> is present int he given sequence
+        /// Checks whether a node of <paramref name="name"/> is present int he given sequence
         /// </summary>
         /// <param name="lines">The sequence of <paramref name="lines"/> to be checked</param>
-        /// <param name="hostName">The name of the host to be looked for</param>
+        /// <param name="name">The name of the node to be looked for</param>
         /// <param name="options">Options how the lookup should be performed</param>
-        /// <returns>whether the <paramref name="hostName"/> is contained in <paramref name="lines"/></returns>
-        public static bool Has(this IEnumerable<ILine> lines, string hostName, MatchingOptions options = MatchingOptions.EXACT) =>
-            lines.Matching(hostName, options).WhereArg<Node>().Any();
+        /// <returns>whether the <paramref name="name"/> is contained in <paramref name="lines"/></returns>
+        public static bool Has(this IEnumerable<ILine> lines, string name, MatchingOptions options = MatchingOptions.EXACT) =>
+            lines.Matching(name, options).WhereArg<Node>().Any();
 
         /// <summary>
         /// Returns the index of the given <paramref name="hostName"/>
@@ -184,23 +195,24 @@ namespace SshTools.Config.Parents
             for (var i = 0; i < lines.Count; i++)
             {
                 if (!(lines[i] is IParameter param)) continue;
-                if (param.Argument is Node node && node.MatchString.Equals(hostName))
+                if (param.Argument is Node node && node.Name.Equals(hostName))
                     return i;
             }
             return -1;
         }
         
         /// <summary>
-        /// Gets a reference to the first matching <see cref="HostNode"/> in the given sequence
+        /// Gets a reference to the first matching <see cref="HostNode"/> in the given sequence.
         /// </summary>
         /// <param name="lines">The sequence of <paramref name="lines"/> to be searched</param>
         /// <param name="hostName">The name of the Host to be looked for</param>
         /// <returns>The first <see cref="HostNode"/> or null of nothing could be found</returns>
+        /// <seealso cref="Find"/>
         public static HostNode Get(this IEnumerable<ILine> lines, string hostName) => lines
-            .Matching(hostName, MatchingOptions.EXACT)
-            .WhereArg<HostNode>()
-            .SelectArg()
-            .FirstOrDefault();
+                .Matching(hostName, MatchingOptions.EXACT)
+                .WhereArg<HostNode>()
+                .SelectArg()
+                .FirstOrDefault();
         
         /// <summary>
         /// Private helper method to find a match keyword and insert a match at a specific position
@@ -221,8 +233,12 @@ namespace SshTools.Config.Parents
         /// <param name="index">The index to be inserted at in range [ -(Count+1); Count-1 ]</param>
         /// <param name="hostName">The name of the new Host</param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Host</returns>
-        public static Result<HostNode> InsertHost(this IList<ILine> lines, int index, string hostName) =>
-            lines.InsertNode(index, new HostNode(hostName));
+        public static Result<HostNode> InsertHost(this IList<ILine> lines, int index, string hostName)
+        {
+            return string.IsNullOrWhiteSpace(hostName)
+                ? Result.Fail<HostNode>("The hostName must not be null or only whitespace")
+                : lines.InsertNode(index, new HostNode(hostName));
+        }
 
         /// <summary>
         /// Inserts a new <see cref="MatchNode"/> at <paramref name="index"/> with a new <see cref="Criteria"/>
@@ -234,8 +250,10 @@ namespace SshTools.Config.Parents
         public static Result<MatchNode> InsertMatch(this IList<ILine> lines, int index, Criteria criteria)
         {
             var match = new MatchNode();
-            match.Set(criteria);
-            return lines.InsertNode(index, match);
+            var res = match.Set(criteria);
+            return res.IsFailed
+                ? res.ToResult<MatchNode>()
+                : lines.InsertNode(index, match);
         }
         
         /// <summary>
@@ -246,11 +264,14 @@ namespace SshTools.Config.Parents
         /// <param name="criteria">The criteria of the match</param>
         /// <param name="argument">The argument of the <paramref name="criteria"/></param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Match</returns>
-        public static Result<MatchNode> InsertMatch(this IList<ILine> lines, int index, ArgumentCriteria criteria, string argument)
+        public static Result<MatchNode> InsertMatch(this IList<ILine> lines, int index,
+            ArgumentCriteria criteria, params string[] argument)
         {
             var match = new MatchNode();
-            match.Set(criteria, argument);
-            return lines.InsertNode(index, match);
+            var res = match.Set(criteria, argument);
+            return res.IsFailed
+                ? res.ToResult<MatchNode>()
+                : lines.InsertNode(index, match);
         }
         
         /// <summary>
@@ -261,10 +282,10 @@ namespace SshTools.Config.Parents
         {
             var res = SshTools.Settings.GetKeyword<T>();
             if (res.IsFailed) return res.ToResult<T>();
-            var matchString = node.MatchString;
+            var matchString = node.Name;
             var param = lines
                 .WhereParam(res.Value)
-                .FirstOrDefault(p => p.Argument.MatchString.Equals(matchString));
+                .FirstOrDefault(p => p.Argument.Name.Equals(matchString));
             if (param is null)
                 return lines.Insert(0, res.Value, node, true);
             param.Argument = node;
@@ -274,8 +295,8 @@ namespace SshTools.Config.Parents
         /// <summary>
         /// Executes one of the following:
         /// <list type="bullet">
-        /// <item>Replaces the <see cref="HostNode"/> with the <paramref name="hostName"/>
-        /// if there is already an entry defined</item>
+        /// <item>Replaces the first defined <see cref="HostNode"/> of matching <paramref name="hostName"/>
+        /// with an empty host, if there is already an entry defined</item>
         /// <item>Inserts a new <see cref="HostNode"/> at the beginning otherwise</item>
         /// </list>
         /// </summary>
@@ -289,8 +310,8 @@ namespace SshTools.Config.Parents
         /// <summary>
         /// Executes one of the following:
         /// <list type="bullet">
-        /// <item>Replaces the <see cref="MatchNode"/> with the <paramref name="criteria"/>
-        /// if there is already an entry defined</item>
+        /// <item>Replaces the first defined <see cref="MatchNode"/> of matching <paramref name="criteria"/>
+        /// with an empty host, if there is already an entry defined</item>
         /// <item>Inserts a new <see cref="MatchNode"/> at the beginning otherwise</item>
         /// </list>
         /// </summary>
@@ -304,12 +325,11 @@ namespace SshTools.Config.Parents
             return lines.SetNode(match);
         }
 
-
         /// <summary>
         /// Executes one of the following:
         /// <list type="bullet">
-        /// <item>Replaces the <see cref="MatchNode"/> with the <paramref name="criteria"/>
-        /// if there is already an entry defined</item>
+        /// <item>Replaces the first defined <see cref="MatchNode"/> of matching <paramref name="criteria"/>
+        /// with an empty host, if there is already an entry defined</item>
         /// <item>Inserts a new <see cref="MatchNode"/> at the beginning otherwise</item>
         /// </list>
         /// </summary>
@@ -325,17 +345,6 @@ namespace SshTools.Config.Parents
         }
 
         /// <summary>
-        /// Removes <paramref name="maxCount"/> of <paramref name="lines"/> that extend <typeparamref name="T"/> and fulfill the given <paramref name="func"/>
-        /// </summary>
-        /// <param name="lines">The sequence of lines to be removed from</param>
-        /// <param name="func">The predicate to be matched</param>
-        /// <param name="maxCount">The maximum of lines to be removed</param>
-        /// <typeparam name="T">The type that the parameter's arguments should extend from</typeparam>
-        /// <returns>The number of removed lines</returns>
-        public static int Remove<T>(this IList<ILine> lines, Func<IArgParameter<T>, bool> func, int maxCount = int.MaxValue) =>
-            lines.Remove(line => line is IArgParameter<T> param && func(param), maxCount);
-
-        /// <summary>
         /// Removes <paramref name="maxCount"/> of nodes, that are matching the given <paramref name="name"/>
         /// </summary>
         /// <param name="lines">The sequence of lines to be removed from</param>
@@ -346,8 +355,17 @@ namespace SshTools.Config.Parents
         public static int Remove(this IList<ILine> lines, string name,
             int maxCount = int.MaxValue,
             MatchingOptions options = MatchingOptions.EXACT) =>
-            lines.Remove<Node>(param => param.Argument.Matches(name, new MatchingContext(name), options), maxCount);
-
+            lines.Remove<Node>(param => param.Matches(name, new MatchingContext(name), options), maxCount);
+        
+        /// <summary>
+        /// Selects all lines of type <see cref="Node"/>
+        /// </summary>
+        /// <param name="lines">The sequence of lines to be selected from</param>
+        /// <returns>A sequence of type <see cref="Node"/></returns>
+        public static IEnumerable<Node> Nodes(this IEnumerable<ILine> lines) => lines
+            .WhereArg<Node>()
+            .SelectArg();
+        
         /// <summary>
         /// Selects all lines of type <see cref="HostNode"/>
         /// </summary>
@@ -365,16 +383,6 @@ namespace SshTools.Config.Parents
         public static IEnumerable<MatchNode> Matches(this IEnumerable<ILine> lines) => lines
             .WhereArg<MatchNode>()
             .SelectArg();
-        
-        /// <summary>
-        /// Selects all lines of type <see cref="Node"/>
-        /// </summary>
-        /// <param name="lines">The sequence of lines to be selected from</param>
-        /// <returns>A sequence of type <see cref="Node"/></returns>
-        public static IEnumerable<Node> Nodes(this IEnumerable<ILine> lines) => lines
-            .WhereArg<Node>()
-            .SelectArg();
-
         
         //-----------------------------------------------------------------------//
         //                    Advanced Functions for Parameters

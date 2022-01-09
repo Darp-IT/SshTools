@@ -12,7 +12,7 @@ namespace SshTools.Tests.Unit.Parents
         [Theory]
         [InlineData(ConfigWithOneNode, 1, 2)]
         [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd, 3, 5)]
-        [InlineData(ConfigWithParameterAndNodes, 3, 5)]
+        [InlineData(ConfigWithTwoNodesAndParameterAtBeginning, 3, 5)]
         public void Flatten_TestCounts(string configString, int expectedCount, int expectedFlattenedCount)
         {
             var config = DeserializeString(configString);
@@ -27,7 +27,7 @@ namespace SshTools.Tests.Unit.Parents
         [InlineData(ConfigWithOnlyANode)]
         [InlineData(ConfigWithOneNode)]
         [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd)]
-        [InlineData(ConfigWithParameterAndNodes)]
+        [InlineData(ConfigWithTwoNodesAndParameterAtBeginning)]
         public void Cloned_TestSameSerialization(string configString)
         {
             var config = DeserializeString(configString);
@@ -41,7 +41,7 @@ namespace SshTools.Tests.Unit.Parents
         [Theory]
         [InlineData(ConfigWithOneNode)]
         [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd)]
-        [InlineData(ConfigWithParameterAndNodes)]
+        [InlineData(ConfigWithTwoNodesAndParameterAtBeginning)]
         public void Cloned_TestIndependence(string configString)
         {
             const string testUser = "this-is-a-long-test-user";

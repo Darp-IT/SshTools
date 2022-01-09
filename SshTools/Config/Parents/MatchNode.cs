@@ -10,7 +10,7 @@ namespace SshTools.Config.Parents
 {
     public class MatchNode : Node
     {
-        public override string MatchString => string.Join("", _criteria.Select(c => c.ToString()));
+        public override string Name => string.Join("", _criteria.Select(c => c.ToString()));
 
         private readonly IList<CriteriaWrapper> _criteria = new List<CriteriaWrapper>();
         
@@ -32,14 +32,22 @@ namespace SshTools.Config.Parents
             return Result.Ok(this);
         }
 
-        public void Set(Criteria criteria) => 
-            SetCriteria(criteria, null);
+        public Result Set(Criteria criteria) => 
+            SetCriteria(criteria);
 
-        public void Set(ArgumentCriteria argumentCriteria, params string[] values) =>
-            SetCriteria(argumentCriteria, string.Join(",", values));
-
-        private Result SetCriteria(Criteria criteria, string value, string spacing = " ", string spacingBack = "")
+        public Result Set(ArgumentCriteria argumentCriteria, params string[] values)
         {
+            if (values is null || values.Length == 0)
+                return Result.Fail($"Could not set criteria {argumentCriteria} to match! No values were provided");
+            return values.All(string.IsNullOrWhiteSpace)
+                ? Result.Fail($"Could not set criteria {argumentCriteria} to match! Only empty values were provided!")
+                : SetCriteria(argumentCriteria, string.Join(",", values));
+        }
+
+        private Result SetCriteria(Criteria criteria, string value = null, string spacing = null, string spacingBack = null)
+        {
+            if (criteria is null)
+                return Result.Fail($"Could not set a criteria to match! Argument criteria must not be null");
             var maybeFirst = _criteria.FirstOrDefault(c => c.Type.Equals(criteria));
             if (maybeFirst == default)
             {
@@ -56,7 +64,7 @@ namespace SshTools.Config.Parents
         public override bool Matches(string search, MatchingContext context, MatchingOptions options)
         {
             return options is MatchingOptions.EXACT
-                ? search.Equals(MatchString)
+                ? search.Equals(Name)
                 : _criteria.All(c => c.Type.Matches(search, context));
         }
 
@@ -69,7 +77,7 @@ namespace SshTools.Config.Parents
                         : p)
                     .ToList()
             );
-            node.Parse(MatchString);
+            node.Parse(Name);
             return node;
         }
 
@@ -83,7 +91,7 @@ namespace SshTools.Config.Parents
 
         internal override Node Copy()
         {
-            var res = new MatchNode().Parse(MatchString);
+            var res = new MatchNode().Parse(Name);
             if (res.IsFailed) throw new Exception("Could not copy node! " + string.Join(",", res.Errors));
             return res.Value;
         }
@@ -106,7 +114,7 @@ namespace SshTools.Config.Parents
 
         public override string ToString() =>
             Type
-            + (Spacing ?? "")
+            + (Spacing ?? (Value == null ? "" : " "))
             + (Value ?? "")
             + (SpacingBack ?? "");
     }

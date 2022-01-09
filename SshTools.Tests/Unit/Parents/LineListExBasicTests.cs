@@ -8,9 +8,8 @@ using static SshTools.Tests.Unit.ConfigResources;
 
 namespace SshTools.Tests.Unit.Parents
 {
-    public class LineListExTestsBasic
+    public class LineListExBasicTests
     {
-        
         [Fact]
         public void Has_TestHasNoUser()
         {
@@ -161,9 +160,9 @@ namespace SshTools.Tests.Unit.Parents
                 User = "user"
             };
 
-            var res = config.Remove(Keyword.User);
+            var count = config.Remove(Keyword.User);
             
-            res.Should().Be(1);
+            count.Should().Be(1);
             config.Should().HaveCount(0);
         }
         
@@ -172,9 +171,9 @@ namespace SshTools.Tests.Unit.Parents
         {
             var config = new SshConfig();
 
-            var res = config.Remove(Keyword.User);
+            var count = config.Remove(Keyword.User);
             
-            res.Should().Be(0);
+            count.Should().Be(0);
             config.Should().HaveCount(0);
         }
         
@@ -194,10 +193,27 @@ namespace SshTools.Tests.Unit.Parents
             config.Insert(-1, Keyword.HostName, "host");
             config.Insert(-1, Keyword.IdentityFile, "identity4");
             
-            var res = config.Remove(Keyword.IdentityFile, itemsToRemove);
+            var count = config.Remove(Keyword.IdentityFile, itemsToRemove);
             
-            res.Should().Be(expectedRemovedItems);
+            count.Should().Be(expectedRemovedItems);
             config.Should().HaveCount(expectedItemsLeft);
+        }
+        
+        [Theory]
+        [InlineData(1, 1, 2)]
+        [InlineData(2, 2, 1)]
+        [InlineData(10, 2, 1)]
+        [InlineData(-1, 0, 3)]
+        public void Remove_TestRemovingNItemsOfTypeHost(int itemsToRemove,
+            int expectedRemovedItems, int expectedItemsLeft)
+        {
+            var config = DeserializeString(ConfigWithTwoNodesAndParameterAtBeginning);
+            
+            var count = config.Remove<HostNode>(_ => true, itemsToRemove);
+
+            count.Should().Be(expectedRemovedItems);
+            config.Should().HaveCount(expectedItemsLeft);
+            
         }
     }
 }

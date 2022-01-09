@@ -23,7 +23,7 @@ namespace SshTools.Tests.Unit.Parents
         [InlineData(ConfigWithOnlyANode)]
         [InlineData(ConfigWithOneNode)]
         [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd)]
-        [InlineData(ConfigWithParameterAndNodes)]
+        [InlineData(ConfigWithTwoNodesAndParameterAtBeginning)]
         public void SerializeString_WithoutChangingConfig(string configString)
         {
             var config = DeserializeString(configString);
@@ -40,7 +40,7 @@ namespace SshTools.Tests.Unit.Parents
         [InlineData(ConfigWithOnlyANode)]
         [InlineData(ConfigWithOneNode)]
         [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd)]
-        [InlineData(ConfigWithParameterAndNodes)]
+        [InlineData(ConfigWithTwoNodesAndParameterAtBeginning)]
         public void SerializeString_AfterIssuingToConfig(string configString)
         {
             var config = DeserializeString(configString);

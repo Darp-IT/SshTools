@@ -22,12 +22,21 @@ namespace SshTools.Tests.Unit
             "  User user1\n" + 
             "Host host2\n" + 
             "  Port 12345   \n";
-        public const string ConfigWithParameterAndNodes = 
+        public const string ConfigWithTwoNodesAndParameterAtBeginning = 
             "IdentityFile ~/.ssh/id_rsa   \n" +
             "Host host1\n" +
             "  User user1\n" + 
             "Host host2\n" + 
             "  Port 12345   ";
+        public const string ConfigWithNodesWithPatterns =
+            "Host host1\n" + 
+            "  User user\n" +
+            "Host host2\n" + 
+            "  Port 12345\n" +
+            "Host host?\n" +
+            "  IdentityFile file.name\n" + 
+            "Host host1*\n" + 
+            "  IdentitiesOnly yes";
         public const string ConfigWithEveryParameter = 
             "HostName host1\n" +
             "IdentitiesOnly yes\n" +

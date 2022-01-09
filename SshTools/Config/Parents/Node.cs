@@ -15,15 +15,15 @@ namespace SshTools.Config.Parents
             
         }
 
-        public abstract string MatchString { get; }
-        public override string ToString() => MatchString;
+        public abstract string Name { get; }
+        public override string ToString() => Name;
 
         public override string Serialize(SerializeConfigOptions options = SerializeConfigOptions.DEFAULT)
         {
             var serializedBase = base.Serialize(options);
             return string.IsNullOrEmpty(serializedBase)
-                ? MatchString
-                : MatchString + Environment.NewLine + serializedBase;
+                ? Name
+                : Name + Environment.NewLine + serializedBase;
         }
 
         internal abstract Result<ILine> GetParam();
