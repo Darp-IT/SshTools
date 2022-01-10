@@ -33,29 +33,5 @@ namespace SshTools.Config.Parser
                 return search;
             });
         }
-        
-        /*public static Result<string> Parse(string search, MatchingContext context)
-        {
-            var pointer = 0;
-            while (search.Length > pointer + 1)
-            {
-                if (search[pointer] is '%' && !(search[pointer + 1] is '%'))
-                {
-                    var tokenChar = search[pointer + 1];
-                    if (!SshTools.Settings.HasToken(tokenChar))
-                        return Result.Fail<string>($"Could not replace tokens - unknown token {tokenChar}");
-                    var res = Result.Try(() => SshTools.Settings.GetToken(tokenChar).Apply(context));
-                    if (res.IsFailed)
-                        return res.ToResult<string>();
-                    search = search.Remove(pointer, 2);
-                    search = search.Insert(pointer, res.Value);
-                }
-                else
-                {
-                    pointer++;
-                }
-            }
-            return Result.Ok(search);
-        }*/
     }
 }

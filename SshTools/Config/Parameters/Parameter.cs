@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SshTools.Config.Util;
 
 namespace SshTools.Config.Parameters
@@ -30,7 +31,7 @@ namespace SshTools.Config.Parameters
             }
         }
 
-        public CommentList Comments => ParameterAppearance.HeaderList;
+        public CommentList Comments { get; private set; } = new CommentList();
         public ParameterAppearance ParameterAppearance { get; }
         
         internal Parameter(Keyword<T> keyword, T argument, ParameterAppearance appearance)
@@ -66,13 +67,18 @@ namespace SshTools.Config.Parameters
             return string.Join(Environment.NewLine, lines);
         }
 
-        public IParameter Clone() =>
+        public ILine Clone() =>
             new Parameter<T>(
                 Keyword,
                 Argument is ICloneable cloneable
                     ? (T) cloneable.Clone()
                     : Argument,
-                (ParameterAppearance) ParameterAppearance.Clone());
+                (ParameterAppearance) ParameterAppearance.Clone())
+            {
+                Comments = Comments.Comments
+                    .Select(c => (Comment) c.Clone())
+                    .ToCommentList()
+            };
 
         public override string ToString() => $"({Keyword}={Argument})";
         object ICloneable.Clone() => Clone();

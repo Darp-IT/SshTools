@@ -5,7 +5,7 @@ namespace SshTools.Config.Parser
 {
     public static class LineParser
     {
-        private static readonly Regex IsLineCommentRegex = new Regex("^(?!\\s*[a-zA-Z])", RegexOptions.Compiled);
+        private static readonly Regex IsLineCommentRegex = new Regex("^(?!\\s*[^#|\\s])", RegexOptions.Compiled);
         private static readonly Regex StartsWithLetterRegex = new Regex("^\\s");
         private static readonly Regex TrimFrontRegex = new Regex("^\\s*", RegexOptions.Compiled);
         private static readonly Regex TrimKeyRegex = new Regex("^[0-9a-zA-Z]*", RegexOptions.Compiled);
@@ -73,17 +73,17 @@ namespace SshTools.Config.Parser
             return TrimSeparatorRegex.Replace(line, "");
         }
 
-        public static string TrimArgument(string line, out Result<string> argument, out bool quoted)
+        public static string TrimArgument(string line, out string argument, out bool quoted)
         {
             var match = TrimQuotedArgumentRegex.Match(line);
             quoted = match.Success;
             if (quoted)
             {
                 var arg = match.Value;
-                argument = Result.Ok(arg.Substring(1, arg.Length - 2));
+                argument = arg.Substring(1, arg.Length - 2);
                 return TrimQuotedArgumentRegex.Replace(line, "");
             }
-            argument = Result.Ok(TrimSpacingBack.Replace(line, ""));
+            argument = TrimSpacingBack.Replace(line, "");
             return TrimSpacingBack.Match(line).Value;
         }
     }

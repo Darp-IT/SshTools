@@ -17,9 +17,9 @@ namespace SshTools
 
         public SshToolsSettings()
         {
-            SetKeywords(Keyword.Values);
-            SetTokens(Token.Values);
-            SetCriteria(Criteria.Values);
+            this.SetKeywords(Keyword.Values)
+                .SetTokens(Token.Values)
+                .SetCriteria(Criteria.Values);
         }
 
         
@@ -27,6 +27,11 @@ namespace SshTools
         //                                Keywords
         //-----------------------------------------------------------------------//
 
+        /// <summary>
+        /// Sets an array of keyword by overwriting the current settings
+        /// </summary>
+        /// <param name="keywords">List of Keywords</param>
+        /// <returns><see cref="SshToolsSettings"/></returns>
         public SshToolsSettings SetKeywords(params Keyword[] keywords)
         {
             _keywordDict.Clear();
@@ -34,8 +39,22 @@ namespace SshTools
             return this;
         }
 
+        /// <summary>
+        /// Determines, whether a <see cref="Keyword"/> for the given, case invariant key is available
+        /// </summary>
+        /// <param name="keyword">The key to look for</param>
+        /// <returns>true, if key is known</returns>
         public bool HasKeyword(string keyword) => _keywordDict.ContainsKey(keyword.ToUpper());
-        public Keyword GetKeyword(string keyword) => _keywordDict[keyword];
+        
+        /// <summary>
+        /// Gets the <see cref="Keyword"/> for the given, case invariant key
+        /// </summary>
+        /// <param name="keyword">The key to be looked for</param>
+        /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">
+        /// The property is retrieved and <paramref name="keyword" /> is not found.
+        /// </exception>
+        /// <returns>The keyword </returns>
+        public Keyword GetKeyword(string keyword) => _keywordDict[keyword.ToUpper()];
         
         internal Result<Keyword<T>> GetKeyword<T>()
         {
@@ -62,6 +81,15 @@ namespace SshTools
             return this;
         }
         public bool HasToken(char token) => _tokenDict.ContainsKey(token);
+        
+        /// <summary>
+        /// Gets the <see cref="Token"/> for the given char
+        /// </summary>
+        /// <param name="token">The char to be looked for</param>
+        /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">
+        /// The property is retrieved and <paramref name="token" /> is not found.
+        /// </exception>
+        /// <returns>The Token </returns>
         public Token GetToken(char token) => _tokenDict[token];
         
         //-----------------------------------------------------------------------//

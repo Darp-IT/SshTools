@@ -6,29 +6,34 @@ namespace SshTools.Config.Parameters
 {
     public class CommentList : IList<string>
     {
-        internal IList<ParameterComment> Comments { get; } = new List<ParameterComment>();
+        internal IList<Comment> Comments { get; } = new List<Comment>();
         public IEnumerator<string> GetEnumerator() => Comments
-            .Select(c => c.Comment).GetEnumerator();
+            .Select(c => c.Argument).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+        internal void Add(Comment item) => 
+            Comments.Add(item);
         public void Add(string item) => 
-            Comments.Add(new ParameterComment(item));
+            Add(new Comment(item));
         public void Add(string item, string spacing) => 
-            Comments.Add(new ParameterComment(item, spacing));
-
+            Add(new Comment(item, spacing));
+        internal void AddRange(IEnumerable<Comment> comments)
+        {
+            foreach (var comment in comments) Add(comment);
+        }
         public void Clear() => Comments.Clear();
 
         public bool Contains(string item) => Comments
-            .Select(c => c.Comment).Contains(item);
+            .Select(c => c.Argument).Contains(item);
 
         public void CopyTo(string[] array, int arrayIndex) => Comments
-            .CopyTo(array.Select(a => new ParameterComment(a)).ToArray(), arrayIndex);
+            .CopyTo(array.Select(a => new Comment(a)).ToArray(), arrayIndex);
 
         public bool Remove(string item)
         {
             for (var i = Comments.Count - 1; i >= 0; i--)
             {
-                if (!Comments[i].Comment.Equals(item)) continue;
+                if (!Comments[i].Argument.Equals(item)) continue;
                 Comments.RemoveAt(i);
                 return true;
             }
@@ -40,7 +45,7 @@ namespace SshTools.Config.Parameters
         {
             for (var i = 0; i < Comments.Count; i++)
             {
-                if (!Comments[i].Comment.Equals(item))
+                if (!Comments[i].Argument.Equals(item))
                     continue;
                 return i;
             }
@@ -48,27 +53,33 @@ namespace SshTools.Config.Parameters
         }
 
         public void Insert(int index, string item) => 
-            Comments.Insert(index, new ParameterComment(item));
+            Comments.Insert(index, new Comment(item));
 
         public void RemoveAt(int index) => Comments.RemoveAt(index);
 
         public string this[int index]
         {
-            get => Comments[index].Comment;
-            set => Comments[index] = new ParameterComment(value);
+            get => Comments[index].Argument;
+            set => Comments[index] = new Comment(value);
         }
     }
     
     public static class CommentListExtensions
     {
-        public static CommentList ToCommentList(this IList<string> list)
+        public static CommentList ToCommentList(this IEnumerable<string> list)
         {
             var res = new CommentList();
             if (list is CommentList commentList)
-                foreach (var c in commentList.Comments)
-                    res.Add(c.Comment, c.Spacing);
+                res.AddRange(commentList.Comments);
             else
                 foreach (var l in list) res.Add(l);
+            return res;
+        }
+        
+        public static CommentList ToCommentList(this IEnumerable<Comment> list)
+        {
+            var res = new CommentList();
+            res.AddRange(list);
             return res;
         }
     }

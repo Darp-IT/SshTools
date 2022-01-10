@@ -10,6 +10,12 @@ namespace SshTools.Config.Extensions
             if (obj == null)
                 throw new ArgumentNullException(name);
         }
+        
+        public static void ThrowIfNullOrEmpty(this string str, [CallerMemberName] string name = null)
+        {
+            if (string.IsNullOrEmpty(str))
+                throw new ArgumentNullException(name);
+        }
 
         public static string ReplaceFirst(this string text, string search, string replace)
         {

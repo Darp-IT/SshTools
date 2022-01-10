@@ -1,4 +1,6 @@
 using System;
+using FluentAssertions;
+using FluentAssertions.Primitives;
 using FluentResults;
 using Xunit;
 
@@ -29,6 +31,13 @@ namespace SshTools.Tests {
 				throw new Exception("Result has failed! Errors: " + string.Join(',', result.Errors));
 			result.Value.ShouldEqual(expected);
 			return result.Value;
+		}
+
+		public static AndConstraint<StringAssertions> BeIgnoreEnvironmentLineBreaks(this StringAssertions stringAssertions,
+			string expected, string because = "", params object[] becauseArgs)
+		{
+			var subject = stringAssertions.Subject.Replace("\r\n", "\n");
+			return subject.Should().Be(expected.Replace("\r\n", "\n"), because, becauseArgs);
 		}
 	}
 }

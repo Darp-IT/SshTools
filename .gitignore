@@ -3,4 +3,6 @@
 /SshTools/obj
 /SshTools.Tests/bin
 /SshTools.Tests/obj
+/SshTools.SshNet/bin
+/SshTools.SshNet/obj
 SshTools.sln.DotSettings.user

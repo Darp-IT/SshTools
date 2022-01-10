@@ -10,11 +10,11 @@ namespace SshTools.Config.Parents
 {
     public class MatchNode : Node
     {
-        public override string MatchString => string.Join("", _criteria.Select(c => c.ToString()));
+        public override string Name => string.Join("", _criteria.Select(c => c.ToString()));
 
         private readonly IList<CriteriaWrapper> _criteria = new List<CriteriaWrapper>();
         
-        public MatchNode(IList<IParameter> parameters = null)
+        public MatchNode(IList<ILine> parameters = null)
             : base(parameters)
         {
             
@@ -32,14 +32,22 @@ namespace SshTools.Config.Parents
             return Result.Ok(this);
         }
 
-        public void Set(Criteria criteria) => 
-            SetCriteria(criteria, null);
+        public Result Set(Criteria criteria) => 
+            SetCriteria(criteria);
 
-        public void Set(ArgumentCriteria argumentCriteria, params string[] values) =>
-            SetCriteria(argumentCriteria, string.Join(",", values));
-
-        private Result SetCriteria(Criteria criteria, string value, string spacing = " ", string spacingBack = "")
+        public Result Set(ArgumentCriteria argumentCriteria, params string[] values)
         {
+            if (values is null || values.Length == 0)
+                return Result.Fail($"Could not set criteria {argumentCriteria} to match! No values were provided");
+            return values.All(string.IsNullOrWhiteSpace)
+                ? Result.Fail($"Could not set criteria {argumentCriteria} to match! Only empty values were provided!")
+                : SetCriteria(argumentCriteria, string.Join(",", values));
+        }
+
+        private Result SetCriteria(Criteria criteria, string value = null, string spacing = null, string spacingBack = null)
+        {
+            if (criteria is null)
+                return Result.Fail($"Could not set a criteria to match! Argument criteria must not be null");
             var maybeFirst = _criteria.FirstOrDefault(c => c.Type.Equals(criteria));
             if (maybeFirst == default)
             {
@@ -56,7 +64,7 @@ namespace SshTools.Config.Parents
         public override bool Matches(string search, MatchingContext context, MatchingOptions options)
         {
             return options is MatchingOptions.EXACT
-                ? search.Equals(MatchString)
+                ? search.Equals(Name)
                 : _criteria.All(c => c.Type.Matches(search, context));
         }
 
@@ -65,25 +73,25 @@ namespace SshTools.Config.Parents
             var node = new MatchNode(
                 this
                     .Select(p => p is ICloneable cloneable 
-                        ? (IParameter) cloneable.Clone() 
+                        ? (ILine) cloneable.Clone() 
                         : p)
                     .ToList()
             );
-            node.Parse(MatchString);
+            node.Parse(Name);
             return node;
         }
 
-        internal override Result<IParameter> GetParam()
+        internal override Result<ILine> GetParam()
         {
             var res = SshTools.Settings.GetKeyword<MatchNode>();
             return res.IsFailed
-                ? res.ToResult<IParameter>()
-                : Result.Ok<IParameter>(res.Value.GetParam(this, ParameterAppearance.Default(res.Value)));
+                ? res.ToResult<ILine>()
+                : Result.Ok<ILine>(res.Value.GetParam(this, ParameterAppearance.Default(res.Value)));
         }
 
         internal override Node Copy()
         {
-            var res = new MatchNode().Parse(MatchString);
+            var res = new MatchNode().Parse(Name);
             if (res.IsFailed) throw new Exception("Could not copy node! " + string.Join(",", res.Errors));
             return res.Value;
         }
@@ -106,7 +114,7 @@ namespace SshTools.Config.Parents
 
         public override string ToString() =>
             Type
-            + (Spacing ?? "")
+            + (Spacing ?? (Value == null ? "" : " "))
             + (Value ?? "")
             + (SpacingBack ?? "");
     }

@@ -1,4 +1,6 @@
-﻿using FluentResults;
+﻿using System;
+using FluentResults;
+using SshTools.Config.Parameters;
 using SshTools.Config.Parents;
 using SshTools.Config.Util;
 
@@ -18,7 +20,7 @@ namespace SshTools.Config.Parser
         
         public static readonly ArgumentParser<SshConfig> SshConfig = new ArgumentParser<SshConfig>(
             Parents.SshConfig.ReadFile,
-            (value, options) => value.FileName
+            (value, options) => value.FileName ?? value.Serialize(options)
         );
         
         public static readonly ArgumentParser<string> String = new ArgumentParser<string>(
@@ -36,9 +38,9 @@ namespace SshTools.Config.Parser
                     case "yes":
                         return Result.Ok(true);
                     case "no":
-                        return Result.Ok(true);
+                        return Result.Ok(false);
                     default:
-                        return Result.Fail<bool>($"Invalid input {str}");
+                        return Result.Fail<bool>($"Could not parse argument. Got invalid invalid input string '{str}'!");
                 }
             }, 
             (value, options) => value ? "yes" : "no",
@@ -56,7 +58,9 @@ namespace SshTools.Config.Parser
 
         public ArgumentParser(DeserializerFunc deserializer, SerializerFunc serializer, string[] possibleValues = null)
         {
-            Deserializer = deserializer;
+            Deserializer = str => str == null
+                ? Result.Fail<T>("Could not parse input str of type null")
+                : deserializer(str);
             Serializer = serializer;
             PossibleValues = possibleValues;
         }
@@ -68,8 +72,6 @@ namespace SshTools.Config.Parser
 
         private static Result<T> Parse(ParserFunc func, string value)
         {
-            if (value == null)
-                return default;
             return func.Invoke(value, out var o) 
                 ? Result.Ok(o) 
                 : Result.Fail<T>($"Could not parse {value} to {typeof(T).Name}");
