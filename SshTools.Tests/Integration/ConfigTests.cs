@@ -288,7 +288,7 @@ namespace SshTools.Tests.Integration
             config.Count(p => p.IsHost()).ShouldEqual(6);
             config.Remove(p => p.IsHost(), 1);
             config.Count(p => p.IsHost()).ShouldEqual(5);
-            config.Remove("eva", options:MatchingOptions.MATCHING);
+            config.Remove("eva", options:MatchingOptions.PATTERN);
             config.Count(p => p.IsHost()).ShouldEqual(3);
             config.Remove<HostNode>(h => true, 1);
             config.Count(p => p.IsHost()).ShouldEqual(2);

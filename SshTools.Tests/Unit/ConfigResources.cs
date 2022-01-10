@@ -16,7 +16,7 @@ namespace SshTools.Tests.Unit
             "Host host1\n";
         public const string ConfigWithOneNode = 
             "Host host1\n" + 
-            "  User user1";
+            "  HostName host-name";
         public const string ConfigWithTwoNodesAndCommentAtTheEnd =
             "Host host1\n" + 
             "  User user1\n" + 
@@ -49,6 +49,39 @@ namespace SshTools.Tests.Unit
         public const string ConfigWithUserAtTheStart =
             "User user1\n" +
             "HostName host1";
+        
+        public const string ConfigWithMultipleParameters =
+            "User user1\n" +
+            "HostName host1\n" + 
+            "User user2\n" +
+            "HostName host2\n" + 
+            "User user3\n" +
+            "HostName host3\n" + 
+            "User user4\n" +
+            "HostName host4\n" ;
+        
+        public const string ConfigWithParametersNodesAndComments =
+            "# Comment1\n" +
+            "\n" + 
+            "IdentitiesOnly yes\n" +
+            "Host *\n" + 
+            "  User user1\n" +
+            "#  Comment for a match\n" +
+            "Match user user1\n" + 
+            "  Port 123\n" +
+            "  HostName name\n" ;
+        
+        public const string ConfigWithRandomShit =
+            "# Comment1   \n" +
+            "  #   \n" + 
+            "IdentitiesOnly yes  \n" +
+            "Host=*\n" + 
+            "  User=\"user1\"\n" +
+            "#  Comment for a match" +
+            "Match=\"user user1\"\n" + 
+            "Port \"123\"\n" +
+            "     HostName name\n" ;
+            
         
         public static SshConfig DeserializeString(string configString)
         {

@@ -143,7 +143,7 @@ namespace SshTools.Config.Parents
         /// <param name="name">The name to be searched by</param>
         /// <param name="options">Searching options</param>
         /// <returns>A list of matching nodes with the config at position 0</returns>
-        public IList<ParameterParent> GetAll(string name, MatchingOptions options = MatchingOptions.MATCHING)
+        public IList<ParameterParent> GetAll(string name, MatchingOptions options = MatchingOptions.PATTERN)
         {
             var list = new List<ParameterParent> { this };
             foreach (var parameter in this.Matching(name, options))

@@ -45,10 +45,6 @@ namespace SshTools.Config.Parser
             }, 
             (value, options) => value ? "yes" : "no",
             new []{ "no", "yes" });
-
-        public static readonly ArgumentParser<CommentList> Comments = new ArgumentParser<CommentList>(
-            str => Result.Ok(str.Split('\n').ToCommentList()),
-            (list, options) => string.Join(Environment.NewLine, list));
     }
 
     public class ArgumentParser<T>

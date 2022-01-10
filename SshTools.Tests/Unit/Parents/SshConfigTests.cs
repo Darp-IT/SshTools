@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using SshTools.Config.Parameters;
 using SshTools.Config.Parents;
 using Xunit;
 
@@ -24,6 +23,7 @@ namespace SshTools.Tests.Unit.Parents
         [InlineData(ConfigWithOneNode)]
         [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd)]
         [InlineData(ConfigWithTwoNodesAndParameterAtBeginning)]
+        [InlineData(ConfigWithRandomShit)]
         public void SerializeString_WithoutChangingConfig(string configString)
         {
             var config = DeserializeString(configString);
@@ -41,6 +41,7 @@ namespace SshTools.Tests.Unit.Parents
         [InlineData(ConfigWithOneNode)]
         [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd)]
         [InlineData(ConfigWithTwoNodesAndParameterAtBeginning)]
+        [InlineData(ConfigWithRandomShit)]
         public void SerializeString_AfterIssuingToConfig(string configString)
         {
             var config = DeserializeString(configString);

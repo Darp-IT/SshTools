@@ -5,19 +5,19 @@ namespace SshTools.Config.Parameters
 {
     public class Comment : ILine
     {
-        public string Spacing { get; set; }
+        public string Spacing { get; }
         public string Argument { get; }
 
-        public Comment(string comment, string spacing = "")
+        internal Comment(string comment, string spacing = "")
         {
             Argument = comment;
             Spacing = spacing;
         }
         
         public string Serialize(SerializeConfigOptions options = SerializeConfigOptions.DEFAULT) => GenerateComment();
-        public string GenerateComment() => Argument.Trim().Length > 0
-            ? Spacing + "#" + Argument
-            : Spacing;
+        public string GenerateComment() => string.IsNullOrEmpty(Argument)
+            ? Spacing
+            : Spacing + "#" + Argument;
         public override string ToString() => $"Comment={GenerateComment()}";
         public ILine Clone() => new Comment(Argument, Spacing);
         object ICloneable.Clone() => Clone();

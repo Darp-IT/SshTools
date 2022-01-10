@@ -7,6 +7,7 @@ namespace SshTools.Config.Parents
 {
     public static class SshConfigExtensions
     {
+
         /// <summary>
         /// Pushes a new <see cref="HostNode"/> to the given <typeparamref name="TLines"/> by inserting at the first place
         /// If there is an error during insertion it will be silently ignored and the <paramref name="func"/> wont be executed

@@ -357,6 +357,11 @@ namespace SshTools.Config.Parents
             MatchingOptions options = MatchingOptions.EXACT) =>
             lines.Remove<Node>(param => param.Matches(name, new MatchingContext(name), options), maxCount);
         
+        
+        //-----------------------------------------------------------------------//
+        //                    LINQ like Functions for Parameters
+        //-----------------------------------------------------------------------//
+        
         /// <summary>
         /// Selects all lines of type <see cref="Node"/>
         /// </summary>
@@ -383,10 +388,6 @@ namespace SshTools.Config.Parents
         public static IEnumerable<MatchNode> Matches(this IEnumerable<ILine> lines) => lines
             .WhereArg<MatchNode>()
             .SelectArg();
-        
-        //-----------------------------------------------------------------------//
-        //                    Advanced Functions for Parameters
-        //-----------------------------------------------------------------------//
         
         /// <summary>
         /// Flattens the given sequence <paramref name="lines"/>.
@@ -510,8 +511,9 @@ namespace SshTools.Config.Parents
                 .Cloned();
         
         /// <summary>
-        /// Scans every parameter in the given sequence and only returns matching ones
-        /// Normal <paramref name="lines"/> are collected and all <see cref="Node"/>s, that apply to <see cref="Node.Matches"/>
+        /// Scans every parameter in the given sequence and only returns matching ones <br/>
+        /// If a line is a comment it will be skipped, normal parameters as well as all
+        /// <see cref="Node"/>s, that apply to <see cref="Node.Matches"/> are being yielded
         /// </summary>
         /// <param name="lines">A sequence of ILine to be matched</param>
         /// <param name="name">The name to be matched against</param>
@@ -520,7 +522,7 @@ namespace SshTools.Config.Parents
         public static IEnumerable<IParameter> Matching(
             this IEnumerable<ILine> lines,
             string name,
-            MatchingOptions options = MatchingOptions.MATCHING)
+            MatchingOptions options = MatchingOptions.PATTERN)
         {
             lines.ThrowIfNull();
             name.ThrowIfNull();
@@ -576,13 +578,18 @@ namespace SshTools.Config.Parents
         }
         
         /// <summary>
-        /// Selects the arguments of all lines, that are of type <see cref="IParameter"/>
+        /// Selects the arguments of all lines, that are of type <see cref="IParameter"/> and ignores comments
         /// </summary>
         /// <param name="lines">A sequence of lines to be selected</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are the selected arguments</returns>
         public static IEnumerable<object> SelectArg(this IEnumerable<ILine> lines) => 
             lines.OfParameter().Select(p => p.Argument);
 
+        /// <summary>
+        /// Selects all <paramref name="lines"/>, that are of type <see cref="IParameter"/>
+        /// </summary>
+        /// <param name="lines">A sequence of lines to be selected from</param>
+        /// <returns>A list containing all parameters of the gives <paramref name="lines"/></returns>
         public static IEnumerable<IParameter> OfParameter(this IEnumerable<ILine> lines) => 
             lines.OfType<IParameter>();
 
@@ -625,7 +632,7 @@ namespace SshTools.Config.Parents
             lines.ThrowIfNull();
             hostName.ThrowIfNull();
             var host = new HostNode(hostName);
-            if (lines is ParameterParent parent)
+            if (lines is Node parent)
                 foreach (var parentComment in parent.Comments)
                     if (!string.IsNullOrWhiteSpace(parentComment)) 
                         host.Comments.Add(parentComment);
@@ -652,7 +659,7 @@ namespace SshTools.Config.Parents
         /// <returns>The new Host</returns>
         public static HostNode Find(this IEnumerable<ILine> lines,
             string hostName,
-            MatchingOptions options = MatchingOptions.MATCHING) =>
+            MatchingOptions options = MatchingOptions.PATTERN) =>
             lines
                 .Compiled()
                 .Matching(hostName, options)

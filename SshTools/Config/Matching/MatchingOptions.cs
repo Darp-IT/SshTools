@@ -12,6 +12,6 @@ namespace SshTools.Config.Matching
         /// <summary>
         /// Will return
         /// </summary>
-        MATCHING
+        PATTERN
     }
 }

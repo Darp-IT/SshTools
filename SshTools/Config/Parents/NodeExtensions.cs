@@ -27,7 +27,7 @@ namespace SshTools.Config.Parents
 
         [Obsolete(HostWarning, true)]
         public static HostNode Find(this Node node, string hostName,
-            MatchingOptions options = MatchingOptions.MATCHING) =>
+            MatchingOptions options = MatchingOptions.PATTERN) =>
             throw new NotImplementedException();
         
         [Obsolete(HostWarning, true)]

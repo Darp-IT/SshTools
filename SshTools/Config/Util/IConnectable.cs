@@ -6,5 +6,6 @@ namespace SshTools.Config.Util
     {
         void Connect(IParameter line);
         void Disconnect();
+        bool IsConnected { get; }
     }
 }

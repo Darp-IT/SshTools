@@ -7,7 +7,7 @@ using SshTools.Config.Util;
 
 namespace SshTools.Config.Parents
 {
-    public abstract class ParameterParent : IList<ILine>, IConfigSerializable, ICloneable, IConnectable
+    public abstract class ParameterParent : IList<ILine>, IConfigSerializable, ICloneable
     {
         //-----------------------------------------------------------------------//
         //                   ParameterParent Keyword Properties
@@ -24,25 +24,10 @@ namespace SshTools.Config.Parents
         //-----------------------------------------------------------------------//
         
         private IList<ILine> Params { get; }
-        protected IParameter Parameter { get; set; }
-        private readonly CommentList _commentsBacking = new CommentList();
 
         internal ParameterParent(IList<ILine> parameters = null) => 
             Params = parameters ?? new List<ILine>();
 
-        public void Connect(IParameter param)
-        {
-            Parameter = param;
-            if (_commentsBacking.Count <= 0) return;
-            Parameter.Comments.Clear();
-            foreach (var c in _commentsBacking.Comments) 
-                Parameter.Comments.Add(c);
-        }
-        public void Disconnect() => Parameter = null;
-        public CommentList Comments => IsConnected
-            ? Parameter.Comments
-            : _commentsBacking;
-        public bool IsConnected => Parameter != null;
         
         public object this[Keyword keyword] => this.Get(keyword);
         public virtual string Serialize(SerializeConfigOptions options = SerializeConfigOptions.DEFAULT) => 

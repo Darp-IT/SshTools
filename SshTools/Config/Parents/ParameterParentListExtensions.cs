@@ -19,9 +19,10 @@ namespace SshTools.Config.Parents
             var host = new HostNode(hostName);
             foreach (var parent in included)
             {
-                foreach (var parentComment in parent.Comments)
-                    if (!string.IsNullOrWhiteSpace(parentComment))
-                        host.Comments.Add(parentComment);
+                if (parent is Node node)
+                    foreach (var nodeComment in node.Comments.Comments)
+                        if (!string.IsNullOrWhiteSpace(nodeComment.Argument))
+                            host.Comments.Add(nodeComment);
                 foreach (var line in parent)
                 {
                     if (!(line is IParameter param)

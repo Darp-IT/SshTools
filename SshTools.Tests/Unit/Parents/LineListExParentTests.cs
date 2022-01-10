@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using FluentAssertions;
 using FluentResults.Extensions.FluentAssertions;
 using SshTools.Config.Matching;
@@ -27,7 +26,7 @@ namespace SshTools.Tests.Unit.Parents
         {
             var config = DeserializeString(ConfigWithNodesWithPatterns);
 
-            var option = matching ? MatchingOptions.MATCHING : MatchingOptions.EXACT;
+            var option = matching ? MatchingOptions.PATTERN : MatchingOptions.EXACT;
             var hasConfig = config.Has(hostName, option);
 
             hasConfig.Should().Be(expectedHasConfig);
@@ -234,44 +233,6 @@ namespace SshTools.Tests.Unit.Parents
             res.Should().BeSuccess();
             config.Should().HaveCount(1);
             config.Has(criteria + " " + argument).Should().BeTrue();
-        }
-        
-        [Theory]
-        [InlineData(ConfigWithoutAnything, 0)]
-        [InlineData(ConfigWithOnlyANode, 1)]
-        [InlineData(ConfigWithEveryParameter, 2)]
-        public void Nodes_TestCount(string configString, int expectedCount)
-        {
-            var config = DeserializeString(configString);
-
-            var res = config.Nodes();
-
-            res.Should().HaveCount(expectedCount);
-        }
-        
-        [Theory]
-        [InlineData(ConfigWithoutAnything, 0)]
-        [InlineData(ConfigWithOnlyANode, 1)]
-        [InlineData(ConfigWithNodesWithPatterns, 4)]
-        public void Hosts_TestCount(string configString, int expectedCount)
-        {
-            var config = DeserializeString(configString);
-
-            var res = config.Hosts();
-
-            res.Should().HaveCount(expectedCount);
-        }
-        
-        [Theory]
-        [InlineData(ConfigWithoutAnything, 0)]
-        [InlineData(ConfigWithEveryParameter, 1)]
-        public void Matches_TestCount(string configString, int expectedCount)
-        {
-            var config = DeserializeString(configString);
-
-            var res = config.Matches();
-
-            res.Should().HaveCount(expectedCount);
         }
     }
 }

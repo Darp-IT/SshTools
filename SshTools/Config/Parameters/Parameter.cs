@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SshTools.Config.Util;
 
 namespace SshTools.Config.Parameters
@@ -74,7 +75,9 @@ namespace SshTools.Config.Parameters
                     : Argument,
                 (ParameterAppearance) ParameterAppearance.Clone())
             {
-                Comments = Comments
+                Comments = Comments.Comments
+                    .Select(c => (Comment) c.Clone())
+                    .ToCommentList()
             };
 
         public override string ToString() => $"({Keyword}={Argument})";

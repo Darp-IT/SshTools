@@ -66,14 +66,20 @@ namespace SshTools.Config.Parameters
     
     public static class CommentListExtensions
     {
-        public static CommentList ToCommentList(this IList<string> list)
+        public static CommentList ToCommentList(this IEnumerable<string> list)
         {
             var res = new CommentList();
             if (list is CommentList commentList)
-                foreach (var c in commentList.Comments)
-                    res.Add(c.Argument, c.Spacing);
+                res.AddRange(commentList.Comments);
             else
                 foreach (var l in list) res.Add(l);
+            return res;
+        }
+        
+        public static CommentList ToCommentList(this IEnumerable<Comment> list)
+        {
+            var res = new CommentList();
+            res.AddRange(list);
             return res;
         }
     }
