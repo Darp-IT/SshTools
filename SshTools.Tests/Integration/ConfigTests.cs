@@ -76,7 +76,7 @@ namespace SshTools.Tests.Integration
             
             // Return a HostNode with a summary of all matching nodes
             var foundHost = config.Find("jumphost");
-            foundHost.ShouldBe<HostNode>().Count.ShouldEqual(3);
+            foundHost.ShouldBe<HostNode>().Count.ShouldEqual(4);
 
             // Return a Match node, that fulfills the match filter
             //config.FindMatch();

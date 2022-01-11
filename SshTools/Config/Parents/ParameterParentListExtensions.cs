@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using SshTools.Config.Parameters;
 
 namespace SshTools.Config.Parents
@@ -16,21 +17,7 @@ namespace SshTools.Config.Parents
         /// <returns>The new Host</returns>
         public static HostNode ToHost(this IEnumerable<ParameterParent> included, string hostName)
         {
-            var host = new HostNode(hostName);
-            foreach (var parent in included)
-            {
-                if (parent is Node node)
-                    foreach (var nodeComment in node.Comments.Comments)
-                        if (!string.IsNullOrWhiteSpace(nodeComment.Argument))
-                            host.Comments.Add(nodeComment);
-                foreach (var line in parent)
-                {
-                    if (!(line is IParameter param)
-                        || param.Keyword.AllowMultiple || !host.Has(param.Keyword))
-                        host.Add(line);
-                }
-            }
-            return host;
+            return included.SelectMany(l => l.Flatten(false)).ToHost(hostName);
         }
     }
 }

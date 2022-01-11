@@ -388,15 +388,16 @@ namespace SshTools.Config.Parents
         public static IEnumerable<MatchNode> Matches(this IEnumerable<ILine> lines) => lines
             .WhereArg<MatchNode>()
             .SelectArg();
-        
+
         /// <summary>
         /// Flattens the given sequence <paramref name="lines"/>.
         /// Generates a list of all <paramref name="lines"/>, contained in <paramref name="lines"/>;
         /// Creates new and empty nodes and automatically resolves includes
         /// </summary>
         /// <param name="lines">A sequence of lines to flatten</param>
+        /// <param name="resolveIncludes">Specifies if the flatten will be recursively used for underlying configs</param>
         /// <returns>An <see cref="IEnumerable{T}"/> whose elements are the result of the flattening</returns>
-        public static IEnumerable<ILine> Flatten(this IEnumerable<ILine> lines)
+        public static IEnumerable<ILine> Flatten(this IEnumerable<ILine> lines, bool resolveIncludes = true)
         {
             lines.ThrowIfNull();
             var afterFirstHost = false;
@@ -424,8 +425,10 @@ namespace SshTools.Config.Parents
                             matchParam.Keyword,
                             (MatchNode) matchParam.Argument.Copy(),
                             matchParam.ParameterAppearance);
-                    
-                    foreach (var includeParameters in includeParams.Flatten().ToList()) //TODO delete toList?
+                    var enumerable = resolveIncludes
+                        ? includeParams.Flatten()
+                        : includeParams;
+                    foreach (var includeParameters in enumerable)
                         yield return includeParameters;
                 }
                 else
@@ -620,14 +623,22 @@ namespace SshTools.Config.Parents
         }
 
         /// <summary>
-        /// Consumes given enumerable and returns first free <paramref name="lines"/> as a new <see cref="HostNode"/>.
-        /// If a parameter is defined multiple times (except from those intended) only the first will be there.
-        /// Comments of all parents will be added if they contain anything
+        /// Consumes given lines and returns all parameters in a new <see cref="HostNode"/>.
+        /// If a parameter is defined multiple times (except from those intended) only the first will be there.<br/>
+        /// If a line contains a <see cref="Node"/> this line and all parameters inside the Node will be ignored.<br/>
+        /// The newly created host will contain the following comments:
+        /// <list type="bullet">
+        /// <item>If the given <paramref name="lines"/> are of type <see cref="Node"/> all their comments will be added</item>
+        /// <item>If the line is a normal parameter all their comments will be added</item>
+        /// <item>If the line is a <see cref="Comment"/> it will be added</item>
+        /// </list>
+        /// All comments are only being added if they are not empty (or consist of only whitespaces)<br/>
+        /// Use <see cref="Flatten"/> to create a host out of all parameters
         /// </summary>
         /// <param name="lines">A sequence of lines to create the host of</param>
         /// <param name="hostName">HostName of the Host, used as initializer</param>
         /// <returns>HostNode</returns>
-        public static HostNode FirstToHost(this IEnumerable<ILine> lines, string hostName)
+        public static HostNode ToHost(this IEnumerable<ILine> lines, string hostName)
         {
             lines.ThrowIfNull();
             hostName.ThrowIfNull();
@@ -639,19 +650,32 @@ namespace SshTools.Config.Parents
 
             foreach (var line in lines)
             {
-                
-                if (line.IsNode())
-                    break;
-                if (!(line is IParameter param)
-                    || param.Keyword.AllowMultiple || !host.Has(param.Keyword))
-                    host.Add(line);
+                switch (line)
+                {
+                    case IArgParameter<Node> _:
+                        continue;
+                    case IParameter param when param.Keyword.AllowMultiple || !host.Has(param.Keyword):
+                    {
+                        host.Add(line);
+                        foreach (var parentComment in param.Comments.Comments)
+                            if (!string.IsNullOrWhiteSpace(parentComment.Argument))
+                                host.Comments.Add(parentComment);
+                        break;
+                    }
+                    case Comment comment:
+                        if (!string.IsNullOrWhiteSpace(comment.Argument)) 
+                            host.Comments.Add(comment);
+                        break;
+                }
             }
             return host;
         }
         
         /// <summary>
         /// Compiles all matching <paramref name="lines"/> of a config into a new host.
-        /// The host will be completely uncoupled from the config.
+        /// The host will be completely uncoupled from the config.<br/>
+        /// If the list of <paramref name="lines"/> is empty or no matching host could be found,
+        /// the resulting <see cref="HostNode"/> will be empty too
         /// </summary>
         /// <param name="lines">A sequence of lines to be searched</param>
         /// <param name="hostName">The name of the Host to be searched for</param>
@@ -663,8 +687,7 @@ namespace SshTools.Config.Parents
             lines
                 .Compiled()
                 .Matching(hostName, options)
-                .WhereArg<Node>()
-                .SelectArg()
+                .Flatten(false)
                 .ToHost(hostName);
         
         /// <summary>
@@ -725,8 +748,7 @@ namespace SshTools.Config.Parents
         {
             lines.ThrowIfNull();
             filename.ThrowIfNull();
-            return Result.Try(() => 
-                File.WriteAllText(filename, lines.Serialize()));
+            return Result.Try(() => File.WriteAllText(filename, lines.Serialize()));
         }
     }
 }

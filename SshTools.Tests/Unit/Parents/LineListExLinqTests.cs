@@ -54,6 +54,7 @@ namespace SshTools.Tests.Unit.Parents
         [InlineData(ConfigWithOneNode, 1, 2)]
         [InlineData(ConfigWithTwoNodesAndCommentAtTheEnd, 3, 5)]
         [InlineData(ConfigWithTwoNodesAndParameterAtBeginning, 3, 5)]
+        [InlineData(ConfigWithParametersNodesAndComments, 4, 10)]
         public void Flatten_TestCounts(string configString, int expectedCount, int expectedFlattenedCount)
         {
             var config = DeserializeString(configString);
