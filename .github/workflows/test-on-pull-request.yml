@@ -19,5 +19,7 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build --configuration Release --no-restore
-      - name: Test
-        run: dotnet test --no-restore --verbosity normal
+      - name: Unit tests
+        run: dotnet test --filter "SshTools.Tests.Unit" --no-restore --verbosity normal
+      - name: Integration tests
+        run: dotnet test --filter "SshTools.Tests.Integration" --no-restore --verbosity normal
