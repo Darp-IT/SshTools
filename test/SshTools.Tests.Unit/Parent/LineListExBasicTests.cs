@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using FluentResults.Extensions.FluentAssertions;
-using SshTools.Line.Parameter;
 using SshTools.Line.Parameter.Keyword;
 using SshTools.Parent;
 using SshTools.Parent.Host;

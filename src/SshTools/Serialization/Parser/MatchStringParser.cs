@@ -31,10 +31,10 @@ namespace SshTools.Serialization.Parser
             {
                 var match = matches[i];
                 var val = match.Value;
-                if (!SshTools.Settings.HasCriteria(val))
+                if (!SshTools.Settings.Has<Criteria>(val))
                     return Result.Fail($"Expected a criteria! '{val}' is not matching at position {i} of string '{str}'");
                 
-                var criteria = SshTools.Settings.GetCriteria(val);
+                var criteria = SshTools.Settings.Get<Criteria>(val);
                 string spacing = null;
                 string value = null;
                 

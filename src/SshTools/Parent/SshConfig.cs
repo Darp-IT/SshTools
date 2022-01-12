@@ -6,6 +6,7 @@ using FluentResults;
 using SshTools.Line;
 using SshTools.Line.Comment;
 using SshTools.Line.Parameter;
+using SshTools.Line.Parameter.Keyword;
 using SshTools.Parent.Host;
 using SshTools.Parent.Match;
 using SshTools.Serialization;
@@ -73,10 +74,10 @@ namespace SshTools.Parent
                     throw new ResultException(keyRes.WithError($"While parsing line '{l}'"));
 
                 var keyString = keyRes.Value;
-                if (!SshTools.Settings.HasKeyword(keyString))
+                if (!SshTools.Settings.Has<Keyword>(keyString))
                     throw new Exception($"Unknown Keyword {keyRes.Value} while parsing line '{l}'");
 
-                var key = SshTools.Settings.GetKeyword(keyString);
+                var key = SshTools.Settings.Get<Keyword>(keyString);
 
                 line = LineParser.TrimSeparator(line, out var separatorRes);
                 if (separatorRes.IsFailed)

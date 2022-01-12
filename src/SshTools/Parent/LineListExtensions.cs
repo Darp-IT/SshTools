@@ -225,7 +225,7 @@ namespace SshTools.Parent
         private static Result<T> InsertNode<T>(this IList<ILine> lines, int index, T node)
             where T : Node
         {
-            var res = SshTools.Settings.GetKeyword<T>();
+            var res = SshTools.Settings.Get<Keyword<T>>();
             return res.IsSuccess
                 ? lines.Insert(index, res.Value, node)
                 : res.ToResult<T>();
@@ -284,7 +284,7 @@ namespace SshTools.Parent
         private static Result<T> SetNode<T>(this IList<ILine> lines, T node)
             where T : Node
         {
-            var res = SshTools.Settings.GetKeyword<T>();
+            var res = SshTools.Settings.Get<Keyword<T>>();
             if (res.IsFailed) return res.ToResult<T>();
             var matchString = node.PatternName;
             var param = lines

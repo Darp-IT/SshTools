@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.NetworkInformation;
+using SshTools.Settings;
 using SshTools.Util;
 
 namespace SshTools.Parent.Match.Token

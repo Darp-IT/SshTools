@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using FluentResults;
 using SshTools.Parent.Match;
+using SshTools.Parent.Match.Token;
 
 namespace SshTools.Serialization.Parser
 {
@@ -26,9 +27,9 @@ namespace SshTools.Serialization.Parser
                 search = GetPercentagesRegex.Replace(search, match =>
                 {
                     var tokenChar = match.Value[1];
-                    if (!SshTools.Settings.HasToken(tokenChar))
+                    if (!SshTools.Settings.Has<Token>(tokenChar))
                         throw new Exception($"Could not replace tokens - unknown token {tokenChar}");
-                    return SshTools.Settings.GetToken(tokenChar).Apply(context);
+                    return SshTools.Settings.Get<Token>(tokenChar).Apply(context);
                 });
                 return search;
             });

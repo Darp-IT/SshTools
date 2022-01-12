@@ -1,4 +1,8 @@
 ﻿using System;
+using SshTools.Line.Parameter.Keyword;
+using SshTools.Parent.Match.Criteria;
+using SshTools.Parent.Match.Token;
+using SshTools.Settings;
 
 namespace SshTools
 {
@@ -8,5 +12,13 @@ namespace SshTools
         internal static SshToolsSettings Settings { get; } = new SshToolsSettings();
         
         public static void Configure(Action<SshToolsSettings> action) => action(Settings);
+
+        static SshTools()
+        {
+            Configure(settings => settings
+                .Set(Keyword.Values)
+                .Set(Token.Values)
+                .Set(Criteria.Values));
+        }
     }
 }

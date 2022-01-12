@@ -36,12 +36,12 @@ namespace SshTools.Tests.Unit.Serialization.Parser
             const string exampleValue = "hi";
             var context = GetContext();
             var dummyReplacementToken = new Token(exampleKey, _ => exampleValue);
-            SshTools.Configure(config => config.AddTokens(dummyReplacementToken));
+            SshTools.Configure(config => config.Add(dummyReplacementToken));
             
             var res = context.Expand("%" + exampleKey);
             
             res.Should().HaveValue(exampleValue);
-            SshTools.Configure(config => config.SetTokens(Token.Values));
+            SshTools.Configure(config => config.Set(Token.Values));
         }
         
         [Fact]

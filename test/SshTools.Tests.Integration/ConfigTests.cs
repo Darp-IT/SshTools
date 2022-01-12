@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using FluentResults.Extensions.FluentAssertions;
 using SshTools.Line;
-using SshTools.Line.Parameter;
 using SshTools.Line.Parameter.Keyword;
 using SshTools.Parent;
 using SshTools.Parent.Host;
@@ -39,10 +38,10 @@ namespace SshTools.Tests.Integration
         [Fact]
         public void TestConfigure()
         {
-            SshTools.Configure(settings => settings.SetKeywords(Array.Empty<Keyword>()));
+            SshTools.Configure(settings => settings.Set(Array.Empty<Keyword>()));
             var configRes = SshConfig.ReadFile("configs/config");
             configRes.Should().BeFailure();
-            SshTools.Configure(settings => settings.SetKeywords(Keyword.Values));
+            SshTools.Configure(settings => settings.Set(Keyword.Values));
             var configRes2 = SshConfig.ReadFile("configs/config");
             configRes2.Should().BeSuccess();
         }
