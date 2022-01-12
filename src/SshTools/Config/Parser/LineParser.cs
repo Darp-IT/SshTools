@@ -95,6 +95,8 @@ namespace SshTools.Config.Parser
             
         public static Result IsValidPattern(string line)
         {
+            if (line == null)
+                return Result.Fail("Must not be <null>");
             if (!IsValidPatternStartRegex.IsMatch(line))
                 return Result.Fail("Must not start with a whitespace or comma");
             if (!IsValidPatternEndRegex.IsMatch(line))

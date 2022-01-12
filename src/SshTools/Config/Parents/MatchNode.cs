@@ -57,6 +57,8 @@ namespace SshTools.Config.Parents
         //                             Class Content
         //-----------------------------------------------------------------------//
         
+        // TODO removing / ... for match criteria
+
         public override string PatternName => string.Join("", _criteria.Select(c => c.ToString()));
 
         private readonly IList<CriteriaWrapper> _criteria = new List<CriteriaWrapper>();

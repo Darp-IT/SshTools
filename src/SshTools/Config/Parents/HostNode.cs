@@ -20,8 +20,6 @@ namespace SshTools.Config.Parents
         /// <param name="hostName">The name of the host</param>
         public static Result<HostNode> Of(string hostName)
         {
-            if (hostName is null)
-                return Result.Fail<HostNode>($"HostNode creation failed. Given name is null!");
             var res = LineParser.IsValidPattern(hostName);
             return res.IsSuccess
                 ? Result.Ok(new HostNode(hostName))
@@ -32,12 +30,25 @@ namespace SshTools.Config.Parents
         //                             Class Content
         //-----------------------------------------------------------------------//
         
-        // TODO rename functionality for HostNodes, removing / ... for match criteria
-        
-        private HostNode(string patternName) => PatternName = patternName;
-        private HostNode(string patternName, IList<ILine> parameters) : base(parameters) => PatternName = patternName;
-        
-        public override string PatternName { get; }
+        private HostNode(string patternName) => _patternName = patternName;
+        private HostNode(string patternName, IList<ILine> parameters) : base(parameters) => _patternName = patternName;
+
+        private string _patternName;
+        public override string PatternName => _patternName;
+
+        /// <summary>
+        /// Enter a new pattern as name for the <see cref="HostNode"/>.
+        /// Will fail, if the pattern was invalid
+        /// </summary>
+        /// <param name="newPatternName">The pattern to be set</param>
+        /// <returns>Result, whether the pattern was set</returns>
+        public Result Rename(string newPatternName)
+        {
+            var res = LineParser.IsValidPattern(newPatternName);
+            if (res.IsSuccess)
+                _patternName = newPatternName;
+            return res;
+        }
         
         public override object Clone()
         {

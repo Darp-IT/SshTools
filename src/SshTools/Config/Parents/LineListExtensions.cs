@@ -639,11 +639,10 @@ namespace SshTools.Config.Parents
         /// </summary>
         /// <param name="lines">A sequence of lines to create the host of</param>
         /// <param name="hostName">HostName of the Host, used as initializer</param>
-        /// <returns>HostNode or null if creation of the hostNode has failed</returns>
+        /// <returns>HostNode or null if creation of the hostNode has failed (if so, check the patternName)</returns>
         public static HostNode ToHost(this IEnumerable<ILine> lines, string hostName)
         {
             lines.ThrowIfNull();
-            hostName.ThrowIfNull();
             var res = HostNode.Of(hostName);
             if (res.IsFailed) return null;
             var host = res.Value;
