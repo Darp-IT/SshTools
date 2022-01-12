@@ -1,5 +1,5 @@
 ﻿using FluentResults.Extensions.FluentAssertions;
-using SshTools.Config.Parents;
+using SshTools.Parent;
 
 namespace SshTools.Tests.Unit
 {

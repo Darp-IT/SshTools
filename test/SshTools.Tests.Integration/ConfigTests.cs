@@ -1,9 +1,13 @@
 using System;
 using System.Linq;
 using FluentResults.Extensions.FluentAssertions;
-using SshTools.Config.Matching;
-using SshTools.Config.Parameters;
-using SshTools.Config.Parents;
+using SshTools.Line;
+using SshTools.Line.Parameter;
+using SshTools.Line.Parameter.Keyword;
+using SshTools.Parent;
+using SshTools.Parent.Host;
+using SshTools.Parent.Match;
+using SshTools.Parent.Match.Criteria;
 using Xunit;
 
 namespace SshTools.Tests.Integration

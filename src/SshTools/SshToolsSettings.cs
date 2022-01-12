@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using FluentResults;
-using SshTools.Config.Matching;
-using SshTools.Config.Parameters;
+using SshTools.Line.Parameter.Keyword;
+using SshTools.Parent.Match.Criteria;
+using SshTools.Parent.Match.Token;
 
 namespace SshTools
 {

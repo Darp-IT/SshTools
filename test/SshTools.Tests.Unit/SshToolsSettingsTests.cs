@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using FluentAssertions;
-using SshTools.Config.Matching;
+using SshTools.Parent.Match;
+using SshTools.Parent.Match.Token;
 using Xunit;
 
 namespace SshTools.Tests.Unit

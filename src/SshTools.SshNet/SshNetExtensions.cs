@@ -1,6 +1,7 @@
 ﻿using System;
 using FluentResults;
-using SshTools.Config.Parents;
+using SshTools.Parent;
+using SshTools.Parent.Host;
 
 namespace SshTools.SshNet
 {
