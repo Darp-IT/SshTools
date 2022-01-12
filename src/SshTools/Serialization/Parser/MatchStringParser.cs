@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using FluentResults;
 using SshTools.Parent.Match.Criteria;
@@ -7,7 +8,7 @@ namespace SshTools.Serialization.Parser
 {
     public static class MatchStringParser
     {
-        private static readonly Regex Regex = new Regex("[^\\s,]+|[\\s,]+", RegexOptions.Compiled);
+        private static readonly Regex Regex = new Regex("[^\\s]+|[\\s]+", RegexOptions.Compiled);
         
         /// <summary>
         /// Parses the argument of a Match into a list of criteria with optionally arguments and spacing <br/>
@@ -23,6 +24,8 @@ namespace SshTools.Serialization.Parser
         /// <returns>A list with all information</returns>
         public static Result<IList<(Criteria, string, string, string)>> Parse(string str)
         {
+            if (str is null)
+                return Result.Fail("Could not parse criteria. Could not parse string <null>");
             var matches = Regex.Matches(str);
             IList<(Criteria, string, string, string)> list = new List<(Criteria, string, string, string)>();
 
@@ -53,6 +56,11 @@ namespace SshTools.Serialization.Parser
                     spacingBack = matches[i + 1].Value;
                     i++;
                 }
+                var res = criteria.Check(list.Select(c => c.Item1).ToArray());
+                if (res.IsFailed)
+                    return Result.Merge(
+                        Result.Fail($"Criteria '{val} cannot be combined with other criteria in '{str}'"),
+                        res);
                 list.Add((criteria, spacing, value, spacingBack));
                 i++;
             }

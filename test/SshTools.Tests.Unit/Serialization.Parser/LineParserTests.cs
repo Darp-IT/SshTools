@@ -47,7 +47,7 @@ namespace SshTools.Tests.Unit.Serialization.Parser
         {
             var line2 = LineParser.TrimKey(line, out var res);
             
-            res.IsSuccess.Should().Be(success);
+            res.Should().BeSuccess(success);
             if (!success) return;
             line2.Should().Be(expLine);
             res.Should().HaveValue(expected);
@@ -65,7 +65,7 @@ namespace SshTools.Tests.Unit.Serialization.Parser
         {
             var line2 = LineParser.TrimSeparator(line, out var res);
             
-            res.IsSuccess.Should().Be(success);
+            res.Should().BeSuccess(success);
             if (!success) return;
             line2.Should().Be(expLine);
             res.Should().HaveValue(expected);
@@ -108,7 +108,7 @@ namespace SshTools.Tests.Unit.Serialization.Parser
         {
             var res = LineParser.IsValidPattern(line);
             
-            res.IsSuccess.Should().Be(expectedSuccess);
+            res.Should().BeSuccess(expectedSuccess);
         }
     }
 }   

@@ -1,5 +1,6 @@
 ﻿using System;
 using FluentAssertions;
+using FluentResults.Extensions.FluentAssertions;
 using SshTools.Parent.Host;
 using SshTools.Parent.Match;
 using SshTools.Serialization;
@@ -19,7 +20,7 @@ namespace SshTools.Tests.Unit.Serialization.Parser
             where TParser : ArgumentParser<TArgument>
         {
             var res = parser.Deserializer(argument);
-            res.IsSuccess.Should().Be(success);
+            res.Should().BeSuccess(success);
             if (res.IsFailed) return;
 
             isExpected(res.Value).Should().BeTrue();

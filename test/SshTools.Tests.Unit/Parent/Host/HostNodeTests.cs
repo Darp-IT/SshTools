@@ -17,7 +17,7 @@ namespace SshTools.Tests.Unit.Parent.Host
         {
             var res = HostNode.Of(patternName);
 
-            res.IsSuccess.Should().Be(expectedIsSuccess);
+            res.Should().BeSuccess(expectedIsSuccess);
         }
         
         
