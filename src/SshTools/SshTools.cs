@@ -16,9 +16,9 @@ namespace SshTools
         static SshTools()
         {
             Configure(settings => settings
-                .Set(Keyword.Values)
-                .Set(Token.Values)
-                .Set(Criteria.Values));
+                .Add(Keyword.Values)
+                .Add(Token.Values)
+                .Add(Criteria.Values));
         }
     }
 }

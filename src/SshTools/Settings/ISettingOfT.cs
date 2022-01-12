@@ -1,6 +1,6 @@
 ﻿namespace SshTools.Settings
 {
-    public interface ISetting<out T> : ISetting
+    public interface IKeyedSetting<out T> : IKeyedSetting
     {
         new T Key { get; }
     }

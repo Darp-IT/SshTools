@@ -38,10 +38,10 @@ namespace SshTools.Tests.Integration
         [Fact]
         public void TestConfigure()
         {
-            SshTools.Configure(settings => settings.Set(Array.Empty<Keyword>()));
+            SshTools.Configure(settings => settings.Clear<Keyword>());
             var configRes = SshConfig.ReadFile("configs/config");
             configRes.Should().BeFailure();
-            SshTools.Configure(settings => settings.Set(Keyword.Values));
+            SshTools.Configure(settings => settings.Add(Keyword.Values));
             var configRes2 = SshConfig.ReadFile("configs/config");
             configRes2.Should().BeSuccess();
         }
