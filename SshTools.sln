@@ -1,10 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SshTools", "SshTools\SshTools.csproj", "{DA0E397C-174E-4E78-A655-C07126AA7B71}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SshTools", "src\SshTools\SshTools.csproj", "{DA0E397C-174E-4E78-A655-C07126AA7B71}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SshTools.Tests", "SshTools.Tests\SshTools.Tests.csproj", "{6311BEAD-2CC2-472D-8DC6-F7478FDA55B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SshTools.Tests.Unit", "test\SshTools.Tests.Unit\SshTools.Tests.Unit.csproj", "{6311BEAD-2CC2-472D-8DC6-F7478FDA55B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SshTools.SshNet", "SshTools.SshNet\SshTools.SshNet.csproj", "{CE2405E8-F6D2-4439-8C31-61707860E19D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SshTools.SshNet", "src\SshTools.SshNet\SshTools.SshNet.csproj", "{CE2405E8-F6D2-4439-8C31-61707860E19D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SshTools.Tests.Integration", "test\SshTools.Tests.Integration\SshTools.Tests.Integration.csproj", "{34ED070B-C13A-47B9-89DF-BAE9AC852205}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{58ABC48B-8339-4173-B707-C17A3DA1C7AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{B4F3D2F2-C74E-42F8-AB33-A0D8AEA48BDB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +30,15 @@ Global
 		{CE2405E8-F6D2-4439-8C31-61707860E19D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE2405E8-F6D2-4439-8C31-61707860E19D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE2405E8-F6D2-4439-8C31-61707860E19D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34ED070B-C13A-47B9-89DF-BAE9AC852205}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34ED070B-C13A-47B9-89DF-BAE9AC852205}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34ED070B-C13A-47B9-89DF-BAE9AC852205}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34ED070B-C13A-47B9-89DF-BAE9AC852205}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DA0E397C-174E-4E78-A655-C07126AA7B71} = {58ABC48B-8339-4173-B707-C17A3DA1C7AF}
+		{CE2405E8-F6D2-4439-8C31-61707860E19D} = {58ABC48B-8339-4173-B707-C17A3DA1C7AF}
+		{6311BEAD-2CC2-472D-8DC6-F7478FDA55B2} = {B4F3D2F2-C74E-42F8-AB33-A0D8AEA48BDB}
+		{34ED070B-C13A-47B9-89DF-BAE9AC852205} = {B4F3D2F2-C74E-42F8-AB33-A0D8AEA48BDB}
 	EndGlobalSection
 EndGlobal
