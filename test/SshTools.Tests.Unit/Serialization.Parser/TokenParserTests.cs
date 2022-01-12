@@ -41,7 +41,7 @@ namespace SshTools.Tests.Unit.Serialization.Parser
             var res = context.Expand("%" + exampleKey);
             
             res.Should().HaveValue(exampleValue);
-            SshTools.Configure(config => config.Add(Token.Values));
+            SshTools.Configure(config => config.Clear<Token>().Add(Token.Values));
         }
         
         [Fact]
