@@ -66,7 +66,7 @@ namespace SshTools.Tests.Unit.Parents
         {
             const string hostName = "name";
             const string newHostName = "name1";
-            var host = new HostNode(hostName);
+            var host = HostNode.Of(hostName).Value;
             host.Comments.Add("TestComment");
             
             var newHost = host.ToHost(newHostName);

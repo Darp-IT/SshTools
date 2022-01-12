@@ -6,7 +6,7 @@ namespace SshTools.Config.Parser
     public static class LineParser
     {
         private static readonly Regex IsLineCommentRegex = new Regex("^(?!\\s*[^#|\\s])", RegexOptions.Compiled);
-        private static readonly Regex StartsWithLetterRegex = new Regex("^\\s");
+        private static readonly Regex StartsWithBlankRegex = new Regex("^\\s");
         private static readonly Regex TrimFrontRegex = new Regex("^\\s*", RegexOptions.Compiled);
         private static readonly Regex TrimKeyRegex = new Regex("^[0-9a-zA-Z]*", RegexOptions.Compiled);
         private static readonly Regex TrimSeparatorRegex = new Regex("^[\t =\v]+", RegexOptions.Compiled);
@@ -43,7 +43,7 @@ namespace SshTools.Config.Parser
         /// <returns>trimmed string</returns>
         public static string TrimKey(string line, out Result<string> key)
         {
-            if (StartsWithLetterRegex.IsMatch(line))
+            if (StartsWithBlankRegex.IsMatch(line))
             {
                 key = Result.Fail<string>($"Line does not start with a letter {line}");
                 return line;
@@ -85,6 +85,23 @@ namespace SshTools.Config.Parser
             }
             argument = TrimSpacingBack.Replace(line, "");
             return TrimSpacingBack.Match(line).Value;
+        }
+        
+        
+        private static readonly Regex IsValidPatternStartRegex = new Regex("^[^\\s,]", RegexOptions.Compiled);
+        private static readonly Regex IsValidPatternEndRegex = new Regex("[^\\s,]$", RegexOptions.Compiled);
+        private static readonly Regex IsValidPatternRegex = new Regex("^((^|[ ,])([^\\s,]+([ ,]|$))+)$", RegexOptions.Compiled);
+
+            
+        public static Result IsValidPattern(string line)
+        {
+            if (!IsValidPatternStartRegex.IsMatch(line))
+                return Result.Fail("Must not start with a whitespace or comma");
+            if (!IsValidPatternEndRegex.IsMatch(line))
+                return Result.Fail("Must not end with a whitespace or comma");
+            if (!IsValidPatternRegex.IsMatch(line))
+                return Result.Fail("Invalid body of pattern! Only one comma or whitespace is allowed as separator!");
+            return Result.Ok();
         }
     }
 }

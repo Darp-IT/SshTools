@@ -5,15 +5,16 @@ namespace SshTools.Config.Matching
 {
     public class Criteria
     {
+        
         /// <summary>
         /// Matches everytime (only allowed alone or directly after <see cref="Canonical"/> or <see cref="Final"/>)
         /// </summary>
-        public static readonly Criteria All = new Criteria(nameof(All), (_,__) => true);
+        public static readonly SingleCriteria All = new SingleCriteria(nameof(All), (_,__) => true);
         
-        public static readonly Criteria Canonical = new Criteria(nameof(Canonical), (_,__) =>
+        public static readonly SingleCriteria Canonical = new SingleCriteria(nameof(Canonical), (_,__) =>
             throw new NotImplementedException());
         
-        public static readonly Criteria Final = new Criteria(nameof(Final), (_,__) =>
+        public static readonly SingleCriteria Final = new SingleCriteria(nameof(Final), (_,__) =>
             throw new NotImplementedException());
         
         /// <summary>
@@ -57,7 +58,6 @@ namespace SshTools.Config.Matching
             .Where(v => v is Criteria)
             .Cast<Criteria>()
             .ToArray();
-        
         //-----------------------------------------------------------------------//
         //                           Criteria object
         //-----------------------------------------------------------------------//
@@ -76,6 +76,13 @@ namespace SshTools.Config.Matching
         public bool Matches(string search, MatchingContext context) => _matchingFunc(search, context);
         
         public override string ToString() => Name;
+    }
+    
+    public class SingleCriteria : Criteria
+    {
+        public SingleCriteria(string name, MatchingFunc matchingFunc) : base(name, matchingFunc)
+        {
+        }
     }
     
     public class ArgumentCriteria : Criteria

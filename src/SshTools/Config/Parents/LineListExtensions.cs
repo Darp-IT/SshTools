@@ -195,7 +195,7 @@ namespace SshTools.Config.Parents
             for (var i = 0; i < lines.Count; i++)
             {
                 if (!(lines[i] is IParameter param)) continue;
-                if (param.Argument is Node node && node.Name.Equals(hostName))
+                if (param.Argument is Node node && node.PatternName.Equals(hostName))
                     return i;
             }
             return -1;
@@ -235,43 +235,42 @@ namespace SshTools.Config.Parents
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Host</returns>
         public static Result<HostNode> InsertHost(this IList<ILine> lines, int index, string hostName)
         {
-            return string.IsNullOrWhiteSpace(hostName)
-                ? Result.Fail<HostNode>("The hostName must not be null or only whitespace")
-                : lines.InsertNode(index, new HostNode(hostName));
+            var res = HostNode.Of(hostName);
+            return res.IsSuccess
+                ? lines.InsertNode(index, res.Value)
+                : res;
         }
 
         /// <summary>
-        /// Inserts a new <see cref="MatchNode"/> at <paramref name="index"/> with a new <see cref="Criteria"/>
+        /// Inserts a new <see cref="MatchNode"/> at <paramref name="index"/> with a new <see cref="SingleCriteria"/>
         /// </summary>
         /// <param name="lines">The list of lines to be inserted at</param>
         /// <param name="index">The index to be inserted at in range [ -(Count+1); Count-1 ]</param>
-        /// <param name="criteria">The criteria of the match</param>
+        /// <param name="singleCriteria">The criteria of the match</param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Match</returns>
-        public static Result<MatchNode> InsertMatch(this IList<ILine> lines, int index, Criteria criteria)
+        public static Result<MatchNode> InsertMatch(this IList<ILine> lines, int index, SingleCriteria singleCriteria)
         {
-            var match = new MatchNode();
-            var res = match.Set(criteria);
-            return res.IsFailed
-                ? res.ToResult<MatchNode>()
-                : lines.InsertNode(index, match);
+            var res = MatchNode.Of(singleCriteria);
+            return res.IsSuccess
+                ? lines.InsertNode(index, res.Value)
+                : res.ToResult<MatchNode>();
         }
         
         /// <summary>
-        /// Inserts a new <see cref="MatchNode"/> at <paramref name="index"/> with a new <see cref="Criteria"/>
+        /// Inserts a new <see cref="MatchNode"/> at <paramref name="index"/> with a new <see cref="ArgumentCriteria"/>
         /// </summary>
         /// <param name="lines">The list of lines to be inserted at</param>
         /// <param name="index">The index to be inserted at in range [ -(Count+1); Count-1 ]</param>
-        /// <param name="criteria">The criteria of the match</param>
-        /// <param name="argument">The argument of the <paramref name="criteria"/></param>
+        /// <param name="argumentCriteria">The criteria of the match</param>
+        /// <param name="arguments">The argument of the <paramref name="argumentCriteria"/></param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the inserted Match</returns>
         public static Result<MatchNode> InsertMatch(this IList<ILine> lines, int index,
-            ArgumentCriteria criteria, params string[] argument)
+            ArgumentCriteria argumentCriteria, params string[] arguments)
         {
-            var match = new MatchNode();
-            var res = match.Set(criteria, argument);
-            return res.IsFailed
-                ? res.ToResult<MatchNode>()
-                : lines.InsertNode(index, match);
+            var res = MatchNode.Of(argumentCriteria, arguments);
+            return res.IsSuccess
+                ? lines.InsertNode(index, res.Value)
+                : res.ToResult<MatchNode>();
         }
         
         /// <summary>
@@ -282,10 +281,10 @@ namespace SshTools.Config.Parents
         {
             var res = SshTools.Settings.GetKeyword<T>();
             if (res.IsFailed) return res.ToResult<T>();
-            var matchString = node.Name;
+            var matchString = node.PatternName;
             var param = lines
                 .WhereParam(res.Value)
-                .FirstOrDefault(p => p.Argument.Name.Equals(matchString));
+                .FirstOrDefault(p => p.Argument.PatternName.Equals(matchString));
             if (param is null)
                 return lines.Insert(0, res.Value, node, true);
             param.Argument = node;
@@ -303,26 +302,30 @@ namespace SshTools.Config.Parents
         /// <param name="lines">The list of lines to be set to</param>
         /// <param name="hostName">The name of the host to be set</param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the set host</returns>
-        public static Result<HostNode> SetHost(this IList<ILine> lines, string hostName) =>
-            lines.SetNode(new HostNode(hostName));
-        
-        
+        public static Result<HostNode> SetHost(this IList<ILine> lines, string hostName)
+        {
+            var res = HostNode.Of(hostName);
+            return res.IsSuccess
+                ? lines.SetNode(res.Value)
+                : res;
+        }
+
+
         /// <summary>
         /// Executes one of the following:
         /// <list type="bullet">
-        /// <item>Replaces the first defined <see cref="MatchNode"/> of matching <paramref name="criteria"/>
+        /// <item>Replaces the first defined <see cref="MatchNode"/> of matching <paramref name="singleCriteria"/>
         /// with an empty host, if there is already an entry defined</item>
         /// <item>Inserts a new <see cref="MatchNode"/> at the beginning otherwise</item>
         /// </list>
         /// </summary>
         /// <param name="lines">The list of lines to be set to</param>
-        /// <param name="criteria">The criteria of the match to be set</param>
+        /// <param name="singleCriteria">The criteria of the match to be set</param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the set match</returns>
-        public static Result<MatchNode> SetMatch(this IList<ILine> lines, Criteria criteria)
+        public static Result<MatchNode> SetMatch(this IList<ILine> lines, SingleCriteria singleCriteria)
         {
-            var match = new MatchNode();
-            match.Set(criteria);
-            return lines.SetNode(match);
+            var res = MatchNode.Of(singleCriteria);
+            return res.IsSuccess ? lines.SetNode(res.Value) : res;
         }
 
         /// <summary>
@@ -335,13 +338,12 @@ namespace SshTools.Config.Parents
         /// </summary>
         /// <param name="lines">The list of lines to be set to</param>
         /// <param name="criteria">The criteria of the match to be set</param>
-        /// <param name="argument">The argument of the <paramref name="criteria"/></param>
+        /// <param name="arguments">The argument(s) of the <paramref name="criteria"/></param>
         /// <returns>A <see cref="Result{TValue}"/> with optionally the set match</returns>
-        public static Result<MatchNode> SetMatch(this IList<ILine> lines, ArgumentCriteria criteria, string argument)
+        public static Result<MatchNode> SetMatch(this IList<ILine> lines, ArgumentCriteria criteria, params string[] arguments)
         {
-            var match = new MatchNode();
-            match.Set(criteria, argument);
-            return lines.SetNode(match);
+            var res = MatchNode.Of(criteria, arguments);
+            return res.IsSuccess ? lines.SetNode(res.Value) : res;
         }
 
         /// <summary>
@@ -637,12 +639,15 @@ namespace SshTools.Config.Parents
         /// </summary>
         /// <param name="lines">A sequence of lines to create the host of</param>
         /// <param name="hostName">HostName of the Host, used as initializer</param>
-        /// <returns>HostNode</returns>
+        /// <returns>HostNode or null if creation of the hostNode has failed</returns>
         public static HostNode ToHost(this IEnumerable<ILine> lines, string hostName)
         {
             lines.ThrowIfNull();
             hostName.ThrowIfNull();
-            var host = new HostNode(hostName);
+            var res = HostNode.Of(hostName);
+            if (res.IsFailed) return null;
+            var host = res.Value;
+            
             if (lines is Node parent)
                 foreach (var parentComment in parent.Comments)
                     if (!string.IsNullOrWhiteSpace(parentComment)) 

@@ -57,11 +57,12 @@ namespace SshTools.Tests.Unit.Parents
 
             hasHost.Should().Be(expectedHostEntry);
             if (!hasHost) return;
-            host.Name.Should().Be(hostName);
+            host.PatternName.Should().Be(hostName);
         }
         
         [Theory]
         [InlineData("host", true)]
+        [InlineData("* !jumphost", true)]
         [InlineData("", false)]
         [InlineData("       ", false)]
         [InlineData(null, false)]
@@ -111,11 +112,11 @@ namespace SshTools.Tests.Unit.Parents
         
         [Theory]
         [MemberData(nameof(GetSingleCriteria))]
-        public void InsertMatch_TestBasicSingles(Criteria criteria, bool expectedCouldSet)
+        public void InsertMatch_TestBasicSingles(SingleCriteria singleCriteria, bool expectedCouldSet)
         {
             var config = new SshConfig();
 
-            var res = config.InsertMatch(0, criteria);
+            var res = config.InsertMatch(0, singleCriteria);
 
             res.IsSuccess.Should().Be(expectedCouldSet);
             config.Should().HaveCount(expectedCouldSet ? 1 : 0);
@@ -185,7 +186,7 @@ namespace SshTools.Tests.Unit.Parents
             res.Should().BeSuccess();
             config.Should().HaveCount(1);
             res.Value.Should().BeOfType<HostNode>();
-            config[hostName].Name.Should().Be(hostName);
+            config[hostName].PatternName.Should().Be(hostName);
         }
         
         [Fact]

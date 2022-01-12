@@ -180,7 +180,7 @@ namespace SshTools.Tests.Integration
         [Fact]
         public void TestAddNodeToNode()
         {
-            var host = new HostNode("test");
+            var host = HostNode.Of("test").Value;
             host.Set(Keyword.User, "user").IsFailed.ShouldBeFalse();
             host.Set(Keyword.Host, host).IsFailed.ShouldBeTrue();
         }
@@ -244,7 +244,7 @@ namespace SshTools.Tests.Integration
             config.Has("eva").ShouldEqual(true);
             config.Has("ave").ShouldEqual(false);
             config.IndexOf("eva").ShouldEqual(3);
-            config["eva"].Name.ShouldEqual("eva");
+            config["eva"].PatternName.ShouldEqual("eva");
             var eva = config.Get("eva");
             eva.User.ShouldEqual("evauser");
             Assert.Null(eva.HostName);
@@ -350,7 +350,7 @@ namespace SshTools.Tests.Integration
             var config = LoadConfig("configs/config");
             var dummyParam = config
                 .OfParameter()
-                .First(p => p.Argument is HostNode {Name: "dummy"});
+                .First(p => p.Argument is HostNode {PatternName: "dummy"});
             var dummyCompiledHost = config.Find("dummy");
             var dummyConfigHost = config.GetAll("dummy")[1] as HostNode;
             Assert.NotNull(dummyCompiledHost);

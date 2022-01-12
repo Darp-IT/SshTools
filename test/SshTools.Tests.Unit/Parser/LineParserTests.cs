@@ -91,5 +91,24 @@ namespace SshTools.Tests.Unit.Parser
             res.Should().Be(expected);
             quoted.Should().Be(isQuoted);
         }
+        
+        [Theory]
+        [InlineData("asd,asd", true)]
+        [InlineData("asd asd", true)]
+        [InlineData("* asd", true)]
+        [InlineData("* !asd", true)]
+        [InlineData("*,!asd", true)]
+        [InlineData("* asd dsa", true)]
+        [InlineData("*, asd ", false)]
+        [InlineData("hostName ", false)]
+        [InlineData(" hostName", false)]
+        [InlineData("hostName,", false)]
+        [InlineData(",hostName", false)]
+        public void IsValidPattern_TestLines(string line, bool expectedSuccess)
+        {
+            var res = LineParser.IsValidPattern(line);
+            
+            res.IsSuccess.Should().Be(expectedSuccess);
+        }
     }
 }   

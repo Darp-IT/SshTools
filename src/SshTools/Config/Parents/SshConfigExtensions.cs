@@ -29,14 +29,14 @@ namespace SshTools.Config.Parents
         /// If there is an error during insertion it will be silently ignored and the <paramref name="func"/> wont be executed
         /// </summary>
         /// <param name="lines">The list of lines of type <typeparamref name="TLines"/> to be pushed to</param>
-        /// <param name="criteria">The criteria of the match</param>
+        /// <param name="singleCriteria">The criteria of the match</param>
         /// <param name="func">An optional function to further edit the newly created host</param>
         /// <typeparam name="TLines">The type of the list of <paramref name="lines"/></typeparam>
         /// <returns>The given list of <paramref name="lines"/> with the inserted match at position 0</returns>
-        public static TLines PushMatch<TLines>(this TLines lines, Criteria criteria, Action<MatchNode> func = null)
+        public static TLines PushMatch<TLines>(this TLines lines, SingleCriteria singleCriteria, Action<MatchNode> func = null)
             where TLines : IList<ILine>
         {
-            var res = lines.InsertMatch(0, criteria);
+            var res = lines.InsertMatch(0, singleCriteria);
             if (res.IsSuccess) func?.Invoke(res.Value);
             return lines;
         }

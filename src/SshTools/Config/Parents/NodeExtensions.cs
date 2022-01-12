@@ -35,7 +35,7 @@ namespace SshTools.Config.Parents
             throw new NotImplementedException();
         
         [Obsolete(HostWarning, true)]
-        public static Result<MatchNode> InsertMatch(this Node node, int index, Criteria criteria) =>
+        public static Result<MatchNode> InsertMatch(this Node node, int index, SingleCriteria singleCriteria) =>
             throw new NotImplementedException();
         
         [Obsolete(HostWarning, true)]
@@ -47,7 +47,7 @@ namespace SshTools.Config.Parents
             throw new NotImplementedException();
 
         [Obsolete(HostWarning, true)]
-        public static Result<MatchNode> SetMatch(this Node node, Criteria criteria) =>
+        public static Result<MatchNode> SetMatch(this Node node, SingleCriteria singleCriteria) =>
             throw new NotImplementedException();
 
         [Obsolete(HostWarning, true)]

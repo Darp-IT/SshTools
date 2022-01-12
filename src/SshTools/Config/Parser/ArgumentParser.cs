@@ -1,6 +1,4 @@
-﻿using System;
-using FluentResults;
-using SshTools.Config.Parameters;
+﻿using FluentResults;
 using SshTools.Config.Parents;
 using SshTools.Config.Util;
 
@@ -9,12 +7,12 @@ namespace SshTools.Config.Parser
     public static class ArgumentParser
     {
         public static readonly ArgumentParser<HostNode> Host = new ArgumentParser<HostNode>(
-            str => Result.Ok(new HostNode(str)),
+            HostNode.Of,
             (value, options) => value.Serialize(options)
         );
         
         public static readonly ArgumentParser<MatchNode> Match = new ArgumentParser<MatchNode>(
-            str => new MatchNode().Parse(str),
+            MatchNode.Of,
             (value, options) => value.Serialize(options)
         );
         

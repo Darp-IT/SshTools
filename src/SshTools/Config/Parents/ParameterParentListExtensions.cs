@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using SshTools.Config.Parameters;
 
 namespace SshTools.Config.Parents
 {

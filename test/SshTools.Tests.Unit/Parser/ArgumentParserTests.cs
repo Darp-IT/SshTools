@@ -31,7 +31,7 @@ namespace SshTools.Tests.Unit.Parser
         [InlineData("test-host", true)]
         [InlineData(null, false)]
         public void Host_DeserializeAndSerialize(string argument, bool success = true) =>
-            Test_DeserializeAndSerialize(ArgumentParser.Host, (HostNode v) => v.Name == argument, success, argument);
+            Test_DeserializeAndSerialize(ArgumentParser.Host, (HostNode v) => v.PatternName == argument, success, argument);
         
         [Theory]
         [InlineData("all", true)]
@@ -39,7 +39,7 @@ namespace SshTools.Tests.Unit.Parser
         [InlineData("test", false)]
         [InlineData(null, false)]
         public void Match_DeserializeAndSerialize(string argument, bool success = true) =>
-            Test_DeserializeAndSerialize(ArgumentParser.Match, (MatchNode v) => v.Name == argument, success, argument);
+            Test_DeserializeAndSerialize(ArgumentParser.Match, (MatchNode v) => v.PatternName == argument, success, argument);
         
         [Theory]
         [InlineData("test-host", true, "test-host")]
