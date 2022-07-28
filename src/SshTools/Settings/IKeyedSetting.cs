@@ -2,7 +2,7 @@
 
 namespace SshTools.Settings
 {
-    public interface ISetting
+    public interface IKeyedSetting
     {
         object Key { get; }
         Type Type { get; }

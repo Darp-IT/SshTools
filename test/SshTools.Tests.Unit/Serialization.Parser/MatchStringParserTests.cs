@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using FluentAssertions;
+using FluentResults.Extensions.FluentAssertions;
 using SshTools.Parent.Match.Criteria;
 using SshTools.Serialization.Parser;
 using Xunit;
@@ -30,7 +31,7 @@ namespace SshTools.Tests.Unit.Serialization.Parser
         {
             var res = MatchStringParser.Parse(argument);
             
-            res.IsSuccess.Should().Be(success);
+            res.Should().BeSuccess(success);
             if (res.IsFailed) return;
             var list = res.Value;
             list.Should().HaveCount(1);
@@ -68,7 +69,7 @@ namespace SshTools.Tests.Unit.Serialization.Parser
         {
             var res = MatchStringParser.Parse(argument);
             
-            res.IsSuccess.Should().Be(success);
+            res.Should().BeSuccess(success);
             if (res.IsFailed) return;
             var list = res.Value;
             list.Should().HaveCount(1);
@@ -86,9 +87,9 @@ namespace SshTools.Tests.Unit.Serialization.Parser
                 GetTuple(Criteria.Host, " ", "host0", " "),
                 GetTuple(Criteria.User, " ", "user1")
             };
-            yield return new object[] { "host host0,user user1", true, 
-                GetTuple(Criteria.Host, " ", "host0", ","),
-                GetTuple(Criteria.User, " ", "user1")
+            yield return new object[] { "host host0 user user1,user2", true, 
+                GetTuple(Criteria.Host, " ", "host0", " "),
+                GetTuple(Criteria.User, " ", "user1,user2")
             };
             yield return new object[] {"final all", true, 
                 GetTuple(Criteria.Final, spacingBack:" "),
@@ -106,7 +107,7 @@ namespace SshTools.Tests.Unit.Serialization.Parser
         {
             var res = MatchStringParser.Parse(argument);
             
-            res.IsSuccess.Should().Be(success);
+            res.Should().BeSuccess(success);
             if (res.IsFailed) return;
             var list = res.Value;
 

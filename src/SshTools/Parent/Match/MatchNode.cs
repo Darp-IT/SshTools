@@ -23,7 +23,10 @@ namespace SshTools.Parent.Match
         {
             var match = new MatchNode();
             var res = match.Parse(matchString);
-            return res.IsSuccess ? Result.Ok(match) : res.ToResult<MatchNode>();
+            if (res.IsFailed) return res.ToResult<MatchNode>();
+            return match._criteria.Count > 0
+                ? Result.Ok(match)
+                : Result.Fail<MatchNode>($"Could not parse node. Found no criteria in string {matchString}");
         }
         
         /// <summary>
@@ -96,7 +99,6 @@ namespace SshTools.Parent.Match
             var maybeFirst = _criteria.FirstOrDefault(c => c.Type.Equals(singleCriteria));
             if (maybeFirst == default)
             {
-                //TODO checks if the position is valid
                 //TODO Some way to see if only valid tokens are specified
                 //TODO I need quoted values
                 _criteria.Add(new CriteriaWrapper(singleCriteria, spacing, value, spacingBack));

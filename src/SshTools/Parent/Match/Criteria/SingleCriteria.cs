@@ -3,7 +3,8 @@
 
     public class SingleCriteria : Criteria
     {
-        public SingleCriteria(string name, MatchingFunc matchingFunc) : base(name, matchingFunc)
+        public SingleCriteria(string name, MatchingFunc matchingFunc, CheckFunc checkFunc)
+            : base(name, matchingFunc, checkFunc)
         {
         }
     }

@@ -4,7 +4,7 @@ using SshTools.Settings;
 
 namespace SshTools.Parent.Match.Token
 {
-    public partial class Token : ISetting<char>
+    public partial class Token : IKeyedSetting<char>
     {
         //-----------------------------------------------------------------------//
         //                                Logic
@@ -23,8 +23,8 @@ namespace SshTools.Parent.Match.Token
             (Key, Apply) = (key, func);
 
         public override string ToString() => '%' + Key.ToString();
-        object ISetting.Key => Key;
-        Type ISetting.Type => typeof(Token);
-        char ISetting<char>.Key => Key;
+        object IKeyedSetting.Key => Key;
+        Type IKeyedSetting.Type => typeof(Token);
+        char IKeyedSetting<char>.Key => Key;
     }
 }

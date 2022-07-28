@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using FluentAssertions;
+using SshTools.Line.Parameter.Keyword;
 using SshTools.Parent.Match.Token;
+using SshTools.Serialization.Parser;
 using SshTools.Settings;
 using Xunit;
 
@@ -11,7 +13,7 @@ namespace SshTools.Tests.Unit
         [Theory]
         [InlineData('k', true)]
         [InlineData('x', false)]
-        public void HasToken(char token, bool expected)
+        public void Has_TestTokens(char token, bool expected)
         {
             var settings = new SshToolsSettings();
             settings.Add(Token.Values);
@@ -23,7 +25,7 @@ namespace SshTools.Tests.Unit
         
         [Theory]
         [InlineData('x')]
-        public void GetToken_Unknown(char token)
+        public void Get_TestUnknownTokens(char token)
         {
             var settings = new SshToolsSettings();
             settings.Add(Token.Values);
@@ -34,7 +36,7 @@ namespace SshTools.Tests.Unit
         
         [Theory]
         [InlineData('k')]
-        public void GetToken_Known(char token)
+        public void Get_TestKnownTokens(char token)
         {
             var settings = new SshToolsSettings();
             settings.Add(Token.Values);
@@ -42,6 +44,19 @@ namespace SshTools.Tests.Unit
             var res = settings.Get<Token>(token);
             
             res.Should().BeOfType<Token>();
+        }
+        
+        [Fact]
+        public void Add_TestIfKeywordIsContainedAfterAdding()
+        {
+            const string name = "Test";
+            var settings = new SshToolsSettings();
+            settings.Add(Keyword.Values);
+
+            settings.Add(new Keyword<string>(name, ArgumentParser.String));
+            var key = settings.Get<Keyword>(name);
+
+            key.Name.Should().Be(name);
         }
     }
 }

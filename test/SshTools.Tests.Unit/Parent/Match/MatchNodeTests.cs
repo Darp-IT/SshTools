@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿using FluentResults.Extensions.FluentAssertions;
 using SshTools.Parent.Match;
 using Xunit;
 
@@ -24,7 +24,25 @@ namespace SshTools.Tests.Unit.Parent.Match
         {
             var res = MatchNode.Of(matchString);
 
-            res.IsSuccess.Should().Be(expectedIsSuccess);
+            res.Should().BeSuccess(expectedIsSuccess);
+        }
+        
+        [Theory]
+        [InlineData("all", true)]
+        [InlineData("user user-name1 user user-name2", true)]
+        [InlineData("host *,!hos?1", true)]
+        [InlineData("all canonical", true)]
+        [InlineData("all final", true)]
+        [InlineData("all host test-host", false)]
+        [InlineData("host test-host all", false)]
+        [InlineData("", false)]
+        [InlineData("all all", false)]
+        [InlineData(null, false)]
+        public void Of_TestParsingDifferentPatterns(string patternName, bool expectedIsSuccess)
+        {
+            var res = MatchNode.Of(patternName);
+
+            res.Should().BeSuccess(expectedIsSuccess);
         }
     }
 }

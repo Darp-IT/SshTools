@@ -79,7 +79,7 @@ namespace SshTools.Tests.Unit.Parent
 
             var res = config.Insert(index, Keyword.Port, portValue);
             
-            res.IsSuccess.Should().Be(expectedResult);
+            res.Should().BeSuccess(expectedResult);
             if (res.IsFailed)
                 return;
             // SelectArg only working as we don't have any comments in this case
@@ -100,7 +100,7 @@ namespace SshTools.Tests.Unit.Parent
             var res2 = config.Insert(0, Keyword.User, user2Value, ignoreCount);
             
             res.Should().BeSuccess();
-            res2.IsSuccess.Should().Be(expectedSecondResult);
+            res2.Should().BeSuccess(expectedSecondResult);
             config.Should().HaveCount(expectedConfigCount);
             config.User.Should().Be(expectedUserName);
         }

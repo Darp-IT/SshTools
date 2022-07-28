@@ -74,7 +74,7 @@ namespace SshTools.Tests.Unit.Parent
 
             var res = config.InsertHost(0, hostName);
 
-            res.IsSuccess.Should().Be(expectedCouldSet);
+            res.Should().BeSuccess(expectedCouldSet);
             config.Should().HaveCount(expectedCouldSet ? 1 : 0);
             if (!expectedCouldSet) return;
             res.Value.Should().BeOfType<HostNode>();
@@ -97,7 +97,7 @@ namespace SshTools.Tests.Unit.Parent
 
             var res = config.InsertHost(index, hostName);
             
-            res.IsSuccess.Should().Be(expectedSuccess);
+            res.Should().BeSuccess(expectedSuccess);
             if (res.IsFailed)
                 return;
             // SelectArg only working as we don't have any comments in this case
@@ -120,7 +120,7 @@ namespace SshTools.Tests.Unit.Parent
 
             var res = config.InsertMatch(0, singleCriteria);
 
-            res.IsSuccess.Should().Be(expectedCouldSet);
+            res.Should().BeSuccess(expectedCouldSet);
             config.Should().HaveCount(expectedCouldSet ? 1 : 0);
             if (!expectedCouldSet) return;
             res.Value.Should().BeOfType<MatchNode>();
@@ -148,7 +148,7 @@ namespace SshTools.Tests.Unit.Parent
 
             var res = config.InsertMatch(0, criteria, argument);
 
-            res.IsSuccess.Should().Be(expectedCouldSet);
+            res.Should().BeSuccess(expectedCouldSet);
             config.Should().HaveCount(expectedCouldSet ? 1 : 0);
             if (!expectedCouldSet) return;
             res.Value.Should().BeOfType<MatchNode>();
@@ -170,7 +170,7 @@ namespace SshTools.Tests.Unit.Parent
 
             var res = config.InsertMatch(index, Criteria.All);
             
-            res.IsSuccess.Should().Be(expectedSuccess);
+            res.Should().BeSuccess(expectedSuccess);
             if (res.IsFailed)
                 return;
             // SelectArg only working as we don't have any comments in this case

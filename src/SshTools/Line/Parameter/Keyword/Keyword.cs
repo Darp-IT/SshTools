@@ -5,7 +5,7 @@ using SshTools.Settings;
 
 namespace SshTools.Line.Parameter.Keyword
 {
-    public abstract partial class Keyword : ISetting<string>
+    public abstract partial class Keyword : IKeyedSetting<string>
     {
         //TODO change IsHost to check if return type is of Type HostNode ...
         /// <summary>
@@ -28,8 +28,8 @@ namespace SshTools.Line.Parameter.Keyword
         public override string ToString() => Name;
         internal abstract Result<IParameter> GetParameter(string argument, ParameterAppearance appearance);
         internal abstract object GetDefault();
-        object ISetting.Key => Name;
-        Type ISetting.Type => typeof(Keyword);
-        string ISetting<string>.Key => Name;
+        object IKeyedSetting.Key => Name;
+        Type IKeyedSetting.Type => typeof(Keyword);
+        string IKeyedSetting<string>.Key => Name;
     }
 }
